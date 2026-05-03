@@ -1,0 +1,35 @@
+<svg viewBox="0 0 240 240" xmlns="http://www.w3.org/2000/svg">
+  <circle cx="120" cy="120" r="115" fill="none" stroke="#0C0C0B" stroke-width="8"/>
+  
+  <!-- Boat hull -->
+  <path d="M 70 130 Q 70 150 80 160 L 160 160 Q 170 150 170 130" fill="none" stroke="#0C0C0B" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
+  
+  <!-- Boat planks -->
+  <line x1="75" y1="135" x2="165" y2="135" stroke="#0C0C0B" stroke-width="3"/>
+  <line x1="75" y1="142" x2="165" y2="142" stroke="#0C0C0B" stroke-width="3"/>
+  <line x1="75" y1="149" x2="165" y2="149" stroke="#0C0C0B" stroke-width="3"/>
+  <line x1="75" y1="156" x2="165" y2="156" stroke="#0C0C0B" stroke-width="3"/>
+  
+  <!-- Ark house/cabin -->
+  <path d="M 85 100 L 155 100 L 160 90 L 80 90 Z" fill="none" stroke="#0C0C0B" stroke-width="4" stroke-linejoin="round"/>
+  <rect x="85" y="100" width="70" height="25" fill="none" stroke="#0C0C0B" stroke-width="4" stroke-linejoin="round"/>
+  
+  <!-- Roof -->
+  <path d="M 80 90 L 120 70 L 160 90" fill="none" stroke="#0C0C0B" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
+  
+  <!-- Roof line -->
+  <path d="M 85 88 L 120 72 L 155 88" fill="none" stroke="#0C0C0B" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+  
+  <!-- Windows -->
+  <rect x="95" y="105" width="5" height="5" fill="none" stroke="#0C0C0B" stroke-width="2"/>
+  <rect x="107" y="105" width="5" height="5" fill="none" stroke="#0C0C0B" stroke-width="2"/>
+  <rect x="119" y="105" width="5" height="5" fill="none" stroke="#0C0C0B" stroke-width="2"/>
+  <rect x="131" y="105" width="5" height="5" fill="none" stroke="#0C0C0B" stroke-width="2"/>
+  
+  <!-- Door frame -->
+  <rect x="138" y="105" width="8" height="12" fill="none" stroke="#0C0C0B" stroke-width="2"/>
+  
+  <!-- Water waves -->
+  <path d="M 65 168 Q 75 172 85 168 T 105 168 T 125 168 T 145 168 T 165 168 T 185 168" fill="none" stroke="#0C0C0B" stroke-width="3" stroke-linecap="round"/>
+  <path d="M 60 180 Q 70 184 80 180 T 100 180 T 120 180 T 140 180 T 160 180 T 180 180" fill="none" stroke="#0C0C0B" stroke-width="3" stroke-linecap="round"/>
+</svg>
