@@ -1005,6 +1005,7 @@
       progressRing.style.strokeDasharray = circumference;
       progressRing.style.strokeDashoffset = circumference;
       document.getElementById("progress-goal").textContent = "van " + currencyFormat.format(goal);
+      document.getElementById("donate-heading").textContent = "Help ons " + currencyFormat.format(goal) + " ophalen";
       document.getElementById("stat-days").textContent = numberFormat.format(rendered.days);
       fillDonateModal();
       bindDonateModal();
