@@ -337,6 +337,10 @@
   </style>
 </head>
 <body>
+  <div id="loading-message" style="display: none; position: fixed; top: 0; left: 0; right: 0; background: var(--accent); color: var(--accent-text); padding: 12px; text-align: center; font-weight: 600; z-index: 9999;">
+    ⏳ Server is waking up... Please wait a few seconds and refresh.
+  </div>
+  
   <section class="gate" id="gate" aria-labelledby="gate-title">
     <form class="gate-panel" id="password-form">
       <p class="kicker">( Admin )</p>
@@ -782,6 +786,53 @@
         error.status = response.status;
         return error;
       }
+    })();
+  </script>
+
+  <script>
+    // Check server health on load and periodically
+    (function() {
+      const loadingMessage = document.getElementById('loading-message');
+      let lastCheck = 0;
+
+      async function checkHealth() {
+        try {
+          const response = await fetch('/api/health', { method: 'GET', cache: 'no-store' });
+          if (response.ok) {
+            loadingMessage.style.display = 'none';
+            return true;
+          }
+        } catch (error) {
+          // Server might be down
+        }
+        return false;
+      }
+
+      // Check immediately
+      checkHealth();
+
+      // If page doesn't load properly, show loading message and retry
+      window.addEventListener('error', function(event) {
+        if (event.message && event.message.includes('Failed to fetch')) {
+          loadingMessage.style.display = 'block';
+        }
+      });
+
+      // Also check periodically and show message if server is unreachable
+      function periodicCheck() {
+        checkHealth().then(ok => {
+          if (!ok) {
+            loadingMessage.style.display = 'block';
+          }
+        });
+      }
+
+      // Check every 3 seconds if message is shown
+      setInterval(function() {
+        if (loadingMessage.style.display === 'block') {
+          periodicCheck();
+        }
+      }, 3000);
     })();
   </script>
 </body>
