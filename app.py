@@ -10,11 +10,44 @@ from supabase import Client, create_client
 load_dotenv()
 
 BASE_DIR = Path(__file__).resolve().parent
+SETTINGS_FILE = BASE_DIR / "settings.json"
 
 SUPABASE_URL = os.environ.get("SUPABASE_URL", "")
 SUPABASE_KEY = os.environ.get("SUPABASE_KEY", "")
 SUPABASE_SERVICE_KEY = os.environ.get("SUPABASE_SERVICE_KEY", "")
 ADMIN_PASSWORD_HASH = os.environ.get("ADMIN_PASSWORD_HASH", "")
+
+app = Flask(__name__, static_folder=None)
+app.secret_key = os.environ.get("FLASK_SECRET_KEY", "dev-only-change-me")
+
+
+def load_settings():
+    """Load settings from file or environment variables."""
+    if SETTINGS_FILE.exists():
+        try:
+            with open(SETTINGS_FILE, "r") as f:
+                return json.load(f)
+        except (json.JSONDecodeError, IOError):
+            pass
+    return {}
+
+
+def save_settings(settings):
+    """Save settings to file."""
+    try:
+        with open(SETTINGS_FILE, "w") as f:
+            json.dump(settings, f, indent=2)
+        return True
+    except IOError:
+        return False
+
+
+def get_setting(key, default=None):
+    """Get a setting value, checking file first then environment."""
+    settings = load_settings()
+    if key in settings:
+        return settings[key]
+    return os.environ.get(key, default)
 
 app = Flask(__name__, static_folder=None)
 app.secret_key = os.environ.get("FLASK_SECRET_KEY", "dev-only-change-me")
@@ -64,11 +97,11 @@ def config_js():
         "SUPABASE_SERVICE_KEY": "",
         "ADMIN_API_URL": os.environ.get("ADMIN_API_URL", ""),
         "ADMIN_PASSWORD_HASH": "",
-        "GOAL_EUR": int(os.environ.get("GOAL_EUR", "10000")),
-        "TARGET_DATE": os.environ.get("TARGET_DATE", "2026-02-01"),
-        "IBAN": os.environ.get("IBAN", "[IBAN invullen]"),
-        "IBAN_NAME": os.environ.get("IBAN_NAME", "Stichting [naam invullen]"),
-        "TIKKIE_URL": os.environ.get("TIKKIE_URL", "[Tikkie link invullen]"),
+        "GOAL_EUR": int(get_setting("GOAL_EUR", "10000")),
+        "TARGET_DATE": get_setting("TARGET_DATE", "2027-02-01"),
+        "IBAN": get_setting("IBAN", "[IBAN invullen]"),
+        "IBAN_NAME": get_setting("IBAN_NAME", "Stichting [naam invullen]"),
+        "TIKKIE_URL": get_setting("TIKKIE_URL", "[Tikkie link invullen]"),
     }
     body = "window.NAF_CONFIG = " + json.dumps(config, ensure_ascii=True) + ";\n"
     return Response(body, mimetype="application/javascript")
@@ -93,6 +126,43 @@ def login():
 def logout():
     session.clear()
     return jsonify({"ok": True})
+
+
+@app.get("/api/settings")
+def get_settings():
+    blocked = admin_required()
+    if blocked:
+        return blocked
+    
+    settings = load_settings()
+    return jsonify({
+        "GOAL_EUR": int(settings.get("GOAL_EUR", os.environ.get("GOAL_EUR", "10000"))),
+        "IBAN": settings.get("IBAN", os.environ.get("IBAN", "[IBAN invullen]")),
+        "IBAN_NAME": settings.get("IBAN_NAME", os.environ.get("IBAN_NAME", "Stichting [naam invullen]")),
+        "TIKKIE_URL": settings.get("TIKKIE_URL", os.environ.get("TIKKIE_URL", "[Tikkie link invullen]")),
+    })
+
+
+@app.post("/api/settings")
+def update_settings():
+    blocked = admin_required()
+    if blocked:
+        return blocked
+    
+    payload = request.get_json(silent=True) or {}
+    
+    settings = load_settings()
+    settings.update({
+        "GOAL_EUR": str(payload.get("GOAL_EUR", settings.get("GOAL_EUR", "10000"))),
+        "IBAN": payload.get("IBAN", settings.get("IBAN", "")),
+        "IBAN_NAME": payload.get("IBAN_NAME", settings.get("IBAN_NAME", "")),
+        "TIKKIE_URL": payload.get("TIKKIE_URL", settings.get("TIKKIE_URL", "")),
+    })
+    
+    if save_settings(settings):
+        return jsonify({"ok": True})
+    else:
+        return jsonify({"error": "Kon instellingen niet opslaan."}), 500
 
 
 @app.get("/api/donations")

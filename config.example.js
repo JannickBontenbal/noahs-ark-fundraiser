@@ -6,7 +6,7 @@ window.NAF_CONFIG = {
   ADMIN_API_URL: "",
   ADMIN_PASSWORD_HASH: "",
   GOAL_EUR: 10000,
-  TARGET_DATE: "2026-02-01",
+  TARGET_DATE: "2027-02-01",
   IBAN: "NL00 BANK 0000 0000 00",
   IBAN_NAME: "Stichting naam",
   TIKKIE_URL: "https://tikkie.me/pay/example"

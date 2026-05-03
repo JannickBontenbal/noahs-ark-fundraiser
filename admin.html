@@ -441,6 +441,37 @@
           </div>
         </section>
       </div>
+
+      <section class="panel" aria-labelledby="settings-heading" style="margin-top: 32px;">
+        <div class="panel-head">
+          <p class="kicker">( Instellingen )</p>
+          <h2 id="settings-heading">Campagneparameters</h2>
+        </div>
+        <div class="panel-body">
+          <form id="settings-form" class="form-grid">
+            <div class="field">
+              <label for="goal">Doel (EUR)</label>
+              <input id="goal" name="goal" type="number" min="1" step="1" required>
+            </div>
+            <div class="field">
+              <label for="iban">IBAN</label>
+              <input id="iban" name="iban" type="text" required>
+            </div>
+            <div class="field">
+              <label for="iban_name">Rekeninghouder</label>
+              <input id="iban_name" name="iban_name" type="text" required>
+            </div>
+            <div class="field">
+              <label for="tikkie_url">Tikkie URL</label>
+              <input id="tikkie_url" name="tikkie_url" type="url" required>
+            </div>
+            <div class="form-actions">
+              <button class="button primary" type="submit">Instellingen opslaan</button>
+            </div>
+          </form>
+          <p class="message" id="settings-message" aria-live="polite"></p>
+        </div>
+      </section>
     </main>
   </div>
 
@@ -470,6 +501,7 @@
       document.getElementById("password-form").addEventListener("submit", handlePassword);
       document.getElementById("donation-form").addEventListener("submit", handleInsert);
       document.getElementById("refresh-button").addEventListener("click", loadAdminData);
+      document.getElementById("settings-form").addEventListener("submit", handleSettingsSave);
 
       if (window.sessionStorage.getItem("naf_admin_unlocked") === "true") {
         unlock();
@@ -549,6 +581,7 @@
       function unlock() {
         gate.style.display = "none";
         app.classList.add("is-visible");
+        loadSettingsForm();
         loadAdminData();
       }
 
@@ -769,6 +802,55 @@
         } catch (error) {
           formMessage.className = "message error";
           formMessage.textContent = "Verwijderen is mislukt.";
+          console.error(error);
+        }
+      }
+
+      async function loadSettingsForm() {
+        try {
+          document.getElementById("goal").value = config.GOAL_EUR || 10000;
+          document.getElementById("iban").value = config.IBAN || "";
+          document.getElementById("iban_name").value = config.IBAN_NAME || "";
+          document.getElementById("tikkie_url").value = config.TIKKIE_URL || "";
+        } catch (error) {
+          console.error("Error loading settings:", error);
+        }
+      }
+
+      async function handleSettingsSave(event) {
+        event.preventDefault();
+        var settingsMessage = document.getElementById("settings-message");
+        settingsMessage.className = "message";
+        settingsMessage.textContent = "Opslaan...";
+
+        var form = event.currentTarget;
+        var payload = {
+          GOAL_EUR: Number(form.goal.value),
+          IBAN: form.iban.value.trim(),
+          IBAN_NAME: form.iban_name.value.trim(),
+          TIKKIE_URL: form.tikkie_url.value.trim()
+        };
+
+        try {
+          var response = await fetch(apiPath("/api/settings"), {
+            method: "POST",
+            credentials: "include",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(payload)
+          });
+
+          if (!response.ok) {
+            throw await httpError(response, "Opslaan is mislukt.");
+          }
+
+          settingsMessage.className = "message";
+          settingsMessage.textContent = "Instellingen opgeslagen. Pagina wordt ververst...";
+          setTimeout(function() {
+            window.location.reload();
+          }, 1500);
+        } catch (error) {
+          settingsMessage.className = "message error";
+          settingsMessage.textContent = error.message || "Opslaan is mislukt.";
           console.error(error);
         }
       }
