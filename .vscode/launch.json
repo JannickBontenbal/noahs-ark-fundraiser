@@ -1,0 +1,31 @@
+{
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "name": "Run Flask admin API",
+            "type": "python",
+            "request": "launch",
+            "program": "${workspaceFolder}/app.py",
+            "console": "integratedTerminal",
+            "envFile": "${workspaceFolder}/.env"
+        },
+        {
+            "type": "msedge",
+            "request": "launch",
+            "name": "Open fundraiser via Flask",
+            "url": "http://localhost:5000/"
+        },
+        {
+            "type": "msedge",
+            "request": "launch",
+            "name": "Open admin via Flask",
+            "url": "http://localhost:5000/admin"
+        },
+        {
+            "type": "msedge",
+            "request": "launch",
+            "name": "Open admin.html directly",
+            "file": "${workspaceFolder}/admin.html"
+        }
+    ]
+}

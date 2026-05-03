@@ -1,0 +1,788 @@
+<!doctype html>
+<html lang="nl">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="robots" content="noindex">
+  <title>Admin - Noah's Ark Fundraiser</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Playfair+Display:ital,wght@0,600;0,700;1,600&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --background: #0C0C0B;
+      --surface: #141413;
+      --text-primary: #F0EDE6;
+      --text-muted: rgba(240, 237, 230, 0.38);
+      --text-faint: rgba(240, 237, 230, 0.2);
+      --border: rgba(240, 237, 230, 0.1);
+      --accent: #F0B429;
+      --accent-dim: rgba(240, 180, 41, 0.12);
+      --accent-border: rgba(240, 180, 41, 0.25);
+      --accent-text: #0C0C0B;
+      --display: "Playfair Display", Georgia, serif;
+      --body: "Inter", system-ui, sans-serif;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    html {
+      background: var(--background);
+      color-scheme: dark;
+    }
+
+    body {
+      margin: 0;
+      background: var(--background);
+      color: var(--text-primary);
+      font-family: var(--body);
+      font-size: 14px;
+      line-height: 1.7;
+      letter-spacing: 0;
+    }
+
+    button,
+    input {
+      font: inherit;
+    }
+
+    button {
+      cursor: pointer;
+    }
+
+    a {
+      color: var(--accent);
+      text-decoration: none;
+    }
+
+    .gate {
+      min-height: 100svh;
+      display: grid;
+      place-items: center;
+      padding: 28px;
+    }
+
+    .gate-panel {
+      width: min(100%, 430px);
+      border: 0.5px solid var(--border);
+      background: var(--surface);
+      padding: 28px;
+    }
+
+    .app {
+      display: none;
+      min-height: 100svh;
+    }
+
+    .app.is-visible {
+      display: block;
+    }
+
+    .topbar {
+      display: flex;
+      justify-content: space-between;
+      gap: 20px;
+      align-items: center;
+      padding: 18px 40px;
+      border-bottom: 0.5px solid var(--border);
+      background: rgba(12, 12, 11, 0.94);
+    }
+
+    .brand {
+      color: var(--text-primary);
+      font-size: 12px;
+      font-weight: 700;
+      letter-spacing: 0;
+      text-transform: uppercase;
+    }
+
+    .admin-wrap {
+      width: min(100%, 1180px);
+      margin: 0 auto;
+      padding: 40px;
+    }
+
+    h1,
+    h2 {
+      margin: 0;
+      font-family: var(--display);
+      font-weight: 700;
+      letter-spacing: 0;
+      line-height: 1.08;
+    }
+
+    h1 {
+      font-size: clamp(34px, 5vw, 48px);
+    }
+
+    h2 {
+      font-size: 28px;
+    }
+
+    .kicker {
+      margin: 0 0 8px;
+      color: var(--accent);
+      font-size: 10px;
+      font-weight: 700;
+      letter-spacing: 0;
+      text-transform: uppercase;
+    }
+
+    .muted {
+      color: var(--text-muted);
+    }
+
+    .summary {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      margin: 32px 0;
+      border: 0.5px solid var(--border);
+      background: var(--surface);
+    }
+
+    .summary-item {
+      padding: 20px;
+      min-width: 0;
+    }
+
+    .summary-item + .summary-item {
+      border-left: 0.5px solid var(--border);
+    }
+
+    .summary-item span,
+    label,
+    th {
+      color: var(--text-muted);
+      font-size: 10px;
+      font-weight: 700;
+      letter-spacing: 0;
+      text-transform: uppercase;
+    }
+
+    .summary-item strong {
+      display: block;
+      margin-top: 9px;
+      overflow-wrap: anywhere;
+      font-size: clamp(20px, 3vw, 30px);
+      line-height: 1.1;
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: minmax(280px, 0.42fr) minmax(0, 1fr);
+      gap: 28px;
+      align-items: start;
+    }
+
+    .panel {
+      border: 0.5px solid var(--border);
+      background: var(--surface);
+    }
+
+    .panel-head {
+      padding: 20px 22px;
+      border-bottom: 0.5px solid var(--border);
+    }
+
+    .panel-body {
+      padding: 22px;
+    }
+
+    .form-grid {
+      display: grid;
+      gap: 16px;
+    }
+
+    .field {
+      display: grid;
+      gap: 7px;
+    }
+
+    input {
+      width: 100%;
+      min-height: 44px;
+      padding: 9px 11px;
+      border: 0.5px solid var(--border);
+      border-radius: 0;
+      background: #0F0F0E;
+      color: var(--text-primary);
+      outline: 0;
+    }
+
+    input:focus {
+      border-color: var(--accent);
+    }
+
+    .button {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 44px;
+      padding: 0 16px;
+      border: 0.5px solid var(--border);
+      border-radius: 0;
+      background: transparent;
+      color: var(--text-primary);
+      font-size: 12px;
+      font-weight: 700;
+      letter-spacing: 0;
+      line-height: 1;
+      text-transform: uppercase;
+    }
+
+    .button.primary {
+      border-color: var(--accent);
+      background: var(--accent);
+      color: var(--accent-text);
+    }
+
+    .button.danger {
+      border-color: rgba(255, 114, 94, 0.45);
+      color: #FF725E;
+    }
+
+    .button.ghost {
+      color: var(--text-muted);
+    }
+
+    .message {
+      min-height: 22px;
+      margin: 14px 0 0;
+      color: var(--accent);
+      font-size: 12px;
+      font-weight: 700;
+    }
+
+    .message.error {
+      color: #FF725E;
+    }
+
+    .table-wrap {
+      width: 100%;
+      overflow-x: auto;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      min-width: 720px;
+    }
+
+    th,
+    td {
+      padding: 14px 16px;
+      border-bottom: 0.5px solid var(--border);
+      text-align: left;
+      vertical-align: top;
+    }
+
+    th:last-child,
+    td:last-child {
+      text-align: right;
+    }
+
+    td {
+      color: var(--text-primary);
+      font-size: 13px;
+    }
+
+    td.muted {
+      color: var(--text-muted);
+    }
+
+    .empty-row {
+      color: var(--text-muted);
+      text-align: center;
+    }
+
+    .gate-actions,
+    .form-actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      align-items: center;
+      margin-top: 18px;
+    }
+
+    @media (max-width: 920px) {
+      .summary,
+      .grid {
+        grid-template-columns: 1fr;
+      }
+
+      .summary-item + .summary-item {
+        border-left: 0;
+        border-top: 0.5px solid var(--border);
+      }
+    }
+
+    @media (max-width: 700px) {
+      .topbar,
+      .admin-wrap {
+        padding-left: 22px;
+        padding-right: 22px;
+      }
+
+      .topbar {
+        align-items: flex-start;
+        flex-direction: column;
+      }
+
+      .button {
+        width: 100%;
+      }
+    }
+  </style>
+</head>
+<body>
+  <section class="gate" id="gate" aria-labelledby="gate-title">
+    <form class="gate-panel" id="password-form">
+      <p class="kicker">( Admin )</p>
+      <h1 id="gate-title">Donaties beheren</h1>
+      <p class="muted">Afgeschermd met een lokale wachtwoordcheck.</p>
+      <div class="field">
+        <label for="password">Wachtwoord</label>
+        <input id="password" type="password" autocomplete="current-password" required>
+      </div>
+      <div class="gate-actions">
+        <button class="button primary" type="submit">Open paneel</button>
+        <a class="button ghost" href="index.html">Terug naar site</a>
+      </div>
+      <p class="message error" id="gate-message" aria-live="polite"></p>
+    </form>
+  </section>
+
+  <div class="app" id="app">
+    <header class="topbar">
+      <a class="brand" href="index.html">Guido de Br&egrave;s &times; Noah's Ark</a>
+      <button class="button ghost" type="button" id="refresh-button">Vernieuwen</button>
+    </header>
+
+    <main class="admin-wrap">
+      <p class="kicker">( Donatiepaneel )</p>
+      <h1>Fundraiser administratie</h1>
+      <p class="muted">Handmatige invoer voor Tikkie, IBAN en losse giften.</p>
+
+      <section class="summary" aria-label="Samenvatting">
+        <div class="summary-item">
+          <span>Totaal opgehaald</span>
+          <strong id="summary-total">&euro; 0</strong>
+        </div>
+        <div class="summary-item">
+          <span>Doel</span>
+          <strong id="summary-goal">&euro; 10.000</strong>
+        </div>
+        <div class="summary-item">
+          <span>Donateurs</span>
+          <strong id="summary-donors">0</strong>
+        </div>
+        <div class="summary-item">
+          <span>Nog nodig</span>
+          <strong id="summary-needed">&euro; 10.000</strong>
+        </div>
+      </section>
+
+      <div class="grid">
+        <section class="panel" aria-labelledby="add-heading">
+          <div class="panel-head">
+            <p class="kicker">( Nieuw )</p>
+            <h2 id="add-heading">Donatie toevoegen</h2>
+          </div>
+          <div class="panel-body">
+            <form id="donation-form" class="form-grid">
+              <div class="field">
+                <label for="amount">Bedrag (&euro;)</label>
+                <input id="amount" name="amount" type="number" min="1" step="0.01" required>
+              </div>
+              <div class="field">
+                <label for="donor_name">Naam donateur</label>
+                <input id="donor_name" name="donor_name" type="text" placeholder="Laat leeg voor anoniem">
+              </div>
+              <div class="field">
+                <label for="note">Notitie</label>
+                <input id="note" name="note" type="text">
+              </div>
+              <div class="form-actions">
+                <button class="button primary" type="submit">Toevoegen</button>
+              </div>
+            </form>
+            <p class="message" id="form-message" aria-live="polite"></p>
+          </div>
+        </section>
+
+        <section class="panel" aria-labelledby="log-heading">
+          <div class="panel-head">
+            <p class="kicker">( Logboek )</p>
+            <h2 id="log-heading">Alle donaties</h2>
+          </div>
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>Datum</th>
+                  <th>Naam</th>
+                  <th>Bedrag</th>
+                  <th>Notitie</th>
+                  <th>Verwijder</th>
+                </tr>
+              </thead>
+              <tbody id="donations-body">
+                <tr>
+                  <td class="empty-row" colspan="5">Nog geen data geladen.</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </section>
+      </div>
+    </main>
+  </div>
+
+  <script src="config.js"></script>
+  <script>
+    (function () {
+      "use strict";
+
+      var config = window.NAF_CONFIG || {};
+      var goal = Number(config.GOAL_EUR || 10000);
+      var supabaseUrl = cleanUrl(config.SUPABASE_URL || "");
+      var serviceKey = config.SUPABASE_SERVICE_KEY || "";
+      var adminApiUrl = cleanUrl(config.ADMIN_API_URL || "");
+      var currencyFormat = new Intl.NumberFormat("nl-NL", {
+        style: "currency",
+        currency: "EUR",
+        maximumFractionDigits: 0
+      });
+      var numberFormat = new Intl.NumberFormat("nl-NL", { maximumFractionDigits: 0 });
+      var gate = document.getElementById("gate");
+      var app = document.getElementById("app");
+      var gateMessage = document.getElementById("gate-message");
+      var formMessage = document.getElementById("form-message");
+      var donationsBody = document.getElementById("donations-body");
+
+      document.getElementById("summary-goal").textContent = currencyFormat.format(goal);
+      document.getElementById("password-form").addEventListener("submit", handlePassword);
+      document.getElementById("donation-form").addEventListener("submit", handleInsert);
+      document.getElementById("refresh-button").addEventListener("click", loadAdminData);
+
+      if (window.sessionStorage.getItem("naf_admin_unlocked") === "true") {
+        unlock();
+      }
+
+      function cleanUrl(url) {
+        return String(url || "").replace(/\/+$/, "");
+      }
+
+      function useBackendApi() {
+        return Boolean(adminApiUrl) || (window.location.protocol !== "file:" && !serviceKey);
+      }
+
+      function apiPath(path) {
+        return (adminApiUrl || "") + path;
+      }
+
+      function hasDirectSupabaseConfig() {
+        return Boolean(supabaseUrl && serviceKey);
+      }
+
+      function hasSupabaseConfig() {
+        return useBackendApi() || hasDirectSupabaseConfig();
+      }
+
+      function serviceHeaders() {
+        return {
+          apikey: serviceKey,
+          Authorization: "Bearer " + serviceKey,
+          "Content-Type": "application/json",
+          Prefer: "return=representation"
+        };
+      }
+
+      async function handlePassword(event) {
+        event.preventDefault();
+        gateMessage.textContent = "";
+        var password = document.getElementById("password").value;
+        var expectedHash = String(config.ADMIN_PASSWORD_HASH || "").trim().toLowerCase();
+
+        if (useBackendApi()) {
+          try {
+            var loginResponse = await fetch(apiPath("/api/login"), {
+              method: "POST",
+              credentials: "include",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ password: password })
+            });
+
+            if (!loginResponse.ok) {
+              throw await httpError(loginResponse, "Wachtwoord klopt niet.");
+            }
+
+            window.sessionStorage.setItem("naf_admin_unlocked", "true");
+            unlock();
+            return;
+          } catch (error) {
+            gateMessage.textContent = error.message || "Kon de Python admin API niet bereiken.";
+            return;
+          }
+        }
+
+        if (!expectedHash) {
+          gateMessage.textContent = "Vul ADMIN_PASSWORD_HASH in config.js in.";
+          return;
+        }
+
+        var actualHash = await sha256(password);
+        if (actualHash === expectedHash) {
+          window.sessionStorage.setItem("naf_admin_unlocked", "true");
+          unlock();
+        } else {
+          gateMessage.textContent = "Wachtwoord klopt niet.";
+        }
+      }
+
+      function unlock() {
+        gate.style.display = "none";
+        app.classList.add("is-visible");
+        loadAdminData();
+      }
+
+      async function sha256(text) {
+        var bytes = new TextEncoder().encode(text);
+        var buffer = await crypto.subtle.digest("SHA-256", bytes);
+        return Array.from(new Uint8Array(buffer)).map(function (byte) {
+          return byte.toString(16).padStart(2, "0");
+        }).join("");
+      }
+
+      async function loadAdminData() {
+        if (!hasSupabaseConfig()) {
+          formMessage.className = "message error";
+          formMessage.textContent = "Start app.py en vul SUPABASE_SERVICE_KEY in .env in.";
+          renderRows([]);
+          renderSummary([]);
+          return;
+        }
+
+        try {
+          formMessage.className = "message";
+          formMessage.textContent = "Laden...";
+          var rows = await fetchDonations();
+          renderRows(rows);
+          renderSummary(rows);
+          formMessage.textContent = "";
+        } catch (error) {
+          if (error.status === 401) {
+            window.sessionStorage.removeItem("naf_admin_unlocked");
+            app.classList.remove("is-visible");
+            gate.style.display = "grid";
+            gateMessage.textContent = "Log opnieuw in.";
+          }
+          formMessage.className = "message error";
+          formMessage.textContent = error.message || "Kon donaties niet laden.";
+          console.error(error);
+        }
+      }
+
+      async function fetchDonations() {
+        if (useBackendApi()) {
+          var apiResponse = await fetch(apiPath("/api/donations"), {
+            credentials: "include"
+          });
+          if (!apiResponse.ok) {
+            throw await httpError(apiResponse, "Kon donaties niet laden.");
+          }
+          var body = await apiResponse.json();
+          return body.donations || [];
+        }
+
+        var response = await fetch(supabaseUrl + "/rest/v1/donations?select=id,amount,donor_name,note,created_at&order=created_at.desc", {
+          headers: serviceHeaders()
+        });
+        if (!response.ok) {
+          throw new Error("Fetch donations failed");
+        }
+        return response.json();
+      }
+
+      function renderSummary(rows) {
+        var total = rows.reduce(function (sum, donation) {
+          return sum + (Number(donation.amount) || 0);
+        }, 0);
+        var needed = Math.max(0, goal - total);
+
+        document.getElementById("summary-total").textContent = currencyFormat.format(total);
+        document.getElementById("summary-donors").textContent = numberFormat.format(rows.length);
+        document.getElementById("summary-needed").textContent = currencyFormat.format(needed);
+      }
+
+      function renderRows(rows) {
+        donationsBody.innerHTML = "";
+
+        if (!rows.length) {
+          var emptyRow = document.createElement("tr");
+          var emptyCell = document.createElement("td");
+          emptyCell.className = "empty-row";
+          emptyCell.colSpan = 5;
+          emptyCell.textContent = "Nog geen donaties.";
+          emptyRow.appendChild(emptyCell);
+          donationsBody.appendChild(emptyRow);
+          return;
+        }
+
+        rows.forEach(function (donation) {
+          var row = document.createElement("tr");
+          row.appendChild(cell(formatDate(donation.created_at)));
+          row.appendChild(cell(donation.donor_name || "Anoniem", !donation.donor_name));
+          row.appendChild(cell(currencyFormat.format(Number(donation.amount) || 0)));
+          row.appendChild(cell(donation.note || "", !donation.note));
+
+          var deleteCell = document.createElement("td");
+          var button = document.createElement("button");
+          button.className = "button danger";
+          button.type = "button";
+          button.textContent = "Verwijder";
+          button.addEventListener("click", function () {
+            deleteDonation(donation.id);
+          });
+          deleteCell.appendChild(button);
+          row.appendChild(deleteCell);
+          donationsBody.appendChild(row);
+        });
+      }
+
+      function cell(value, isMuted) {
+        var td = document.createElement("td");
+        td.textContent = value;
+        if (isMuted) {
+          td.className = "muted";
+        }
+        return td;
+      }
+
+      function formatDate(value) {
+        if (!value) {
+          return "";
+        }
+        return new Intl.DateTimeFormat("nl-NL", {
+          dateStyle: "medium",
+          timeStyle: "short"
+        }).format(new Date(value));
+      }
+
+      async function handleInsert(event) {
+        event.preventDefault();
+        formMessage.className = "message";
+        formMessage.textContent = "";
+
+        if (!hasSupabaseConfig()) {
+          formMessage.className = "message error";
+          formMessage.textContent = "Supabase config ontbreekt.";
+          return;
+        }
+
+        var form = event.currentTarget;
+        var amount = Number(form.amount.value);
+        var donorName = form.donor_name.value.trim();
+        var note = form.note.value.trim();
+
+        if (!amount || amount < 1) {
+          formMessage.className = "message error";
+          formMessage.textContent = "Vul een geldig bedrag in.";
+          return;
+        }
+
+        var payload = {
+          amount: amount,
+          donor_name: donorName || null,
+          note: note || null
+        };
+
+        try {
+          form.querySelector("button[type='submit']").disabled = true;
+          var response;
+
+          if (useBackendApi()) {
+            response = await fetch(apiPath("/api/donations"), {
+              method: "POST",
+              credentials: "include",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify(payload)
+            });
+          } else {
+            response = await fetch(supabaseUrl + "/rest/v1/donations", {
+              method: "POST",
+              headers: serviceHeaders(),
+              body: JSON.stringify(payload)
+            });
+          }
+
+          if (!response.ok) {
+            throw await httpError(response, "Toevoegen is mislukt.");
+          }
+
+          form.reset();
+          formMessage.className = "message";
+          formMessage.textContent = "Donatie toegevoegd.";
+          await loadAdminData();
+        } catch (error) {
+          formMessage.className = "message error";
+          formMessage.textContent = "Toevoegen is mislukt.";
+          console.error(error);
+        } finally {
+          form.querySelector("button[type='submit']").disabled = false;
+        }
+      }
+
+      async function deleteDonation(id) {
+        if (!window.confirm("Deze donatie verwijderen?")) {
+          return;
+        }
+
+        try {
+          var response;
+
+          if (useBackendApi()) {
+            response = await fetch(apiPath("/api/donations/" + encodeURIComponent(id)), {
+              method: "DELETE",
+              credentials: "include"
+            });
+          } else {
+            response = await fetch(supabaseUrl + "/rest/v1/donations?id=eq." + encodeURIComponent(id), {
+              method: "DELETE",
+              headers: serviceHeaders()
+            });
+          }
+
+          if (!response.ok) {
+            throw await httpError(response, "Verwijderen is mislukt.");
+          }
+
+          formMessage.className = "message";
+          formMessage.textContent = "Donatie verwijderd.";
+          await loadAdminData();
+        } catch (error) {
+          formMessage.className = "message error";
+          formMessage.textContent = "Verwijderen is mislukt.";
+          console.error(error);
+        }
+      }
+
+      async function httpError(response, fallback) {
+        var message = fallback;
+        try {
+          var body = await response.json();
+          message = body.error || message;
+        } catch (error) {
+          message = response.statusText || message;
+        }
+
+        var error = new Error(message);
+        error.status = response.status;
+        return error;
+      }
+    })();
+  </script>
+</body>
+</html>

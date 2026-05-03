@@ -1,0 +1,28 @@
+services:
+  - type: web
+    name: noahs-ark-fundraiser
+    runtime: python
+    plan: free
+    buildCommand: pip install -r requirements.txt
+    startCommand: gunicorn app:app
+    envVars:
+      - key: SUPABASE_URL
+        value: https://ipbfwummhkuflvqdomai.supabase.co
+      - key: SUPABASE_KEY
+        value: sb_publishable_aQB7EjiqV_MLK_7UVTltiA_1vA2wvgC
+      - key: SUPABASE_SERVICE_KEY
+        sync: false
+      - key: ADMIN_PASSWORD_HASH
+        value: 0ba0d2c0160a5246cd62e302ccb7711cdac6808a965acf6f01a3a93ac6ab9a67
+      - key: FLASK_SECRET_KEY
+        generateValue: true
+      - key: GOAL_EUR
+        value: "10000"
+      - key: TARGET_DATE
+        value: "2026-02-01"
+      - key: IBAN
+        value: "[IBAN invullen]"
+      - key: IBAN_NAME
+        value: "Stichting [naam invullen]"
+      - key: TIKKIE_URL
+        value: "[Tikkie link invullen]"
