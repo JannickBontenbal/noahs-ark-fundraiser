@@ -376,6 +376,20 @@
       accent-color: var(--coral);
     }
 
+    .payment-warning {
+      padding: 14px;
+      border: 1px solid rgba(255, 90, 61, 0.5);
+      border-radius: 6px;
+      background: rgba(255, 90, 61, 0.12);
+      color: var(--ink);
+      font-weight: 850;
+    }
+
+    .payment-warning strong {
+      color: var(--coral);
+      font-weight: 900;
+    }
+
     .side-card {
       display: grid;
       gap: 16px;
@@ -567,13 +581,14 @@
           <div class="field">
             <div class="label-row">
               <label for="description_primary">Omschrijving</label>
-              <button class="field-info" type="button" aria-label="Uitleg over omschrijving" data-tooltip="Gebruik de omschrijving om te vertellen voor welke actie je doneert, of dat je gewoon algemeen wilt doneren.">i</button>
+              <button class="field-info" type="button" aria-label="Uitleg over omschrijving" data-tooltip="Deze omschrijving is voor onze administratie: vertel voor welke actie je doneert, of dat je algemeen wilt doneren. In je bank-app moet de betalingsomschrijving wel precies Actie Guido 2027 zijn.">i</button>
             </div>
             <textarea id="description_primary" name="description_primary" required placeholder="Vul hier je eigen omschrijving in"></textarea>
           </div>
+          <p class="payment-warning">Heel belangrijk: zet bij de bankoverschrijving als betalingsomschrijving precies <strong>Actie Guido 2027</strong>.</p>
           <label class="check-field" for="confirmed_transfer">
             <input id="confirmed_transfer" name="confirmed_transfer" type="checkbox" required>
-            <span>Ik bevestig dat ik dit bedrag zelf via mijn bank overmaak naar de rekening van Noah's Ark. Pas na deze bevestiging telt het bedrag mee.</span>
+            <span>Ik bevestig dat ik dit bedrag zelf via mijn bank overmaak naar de rekening van Noah's Ark en daarbij als betalingsomschrijving precies Actie Guido 2027 gebruik. Pas na deze bevestiging telt het bedrag mee.</span>
           </label>
           <div class="form-actions">
             <button class="button dark" type="submit">Afronden en PDF maken</button>
@@ -620,7 +635,7 @@
             <button class="button copy-button" type="button" data-copy-target="transfer-description">Kopieer omschrijving</button>
           </div>
         </div>
-        <p class="muted">Open je eigen bank-app, vul deze gegevens in en rond de overschrijving daar af. Na afronden maken we hier een PDF-formulier met jouw ingevulde gegevens.</p>
+        <p class="muted">Open je eigen bank-app, vul deze gegevens in en rond de overschrijving daar af. Gebruik als omschrijving exact Actie Guido 2027. Na afronden maken we hier een PDF-formulier met jouw ingevulde gegevens.</p>
       </aside>
     </div>
   </main>
