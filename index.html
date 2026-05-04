@@ -673,12 +673,12 @@
     .noah-slide figcaption {
       position: absolute;
       left: 14px;
-      bottom: 14px;
+      top: 14px;
       z-index: 2;
       max-width: calc(100% - 28px);
-      padding: 7px 9px;
+      padding: 8px 10px;
       border-radius: 4px;
-      background: rgba(8, 8, 6, 0.82);
+      background: rgba(8, 8, 6, 0.9);
       color: var(--surface-strong);
       font-family: var(--mono);
       font-size: 10px;
@@ -690,7 +690,7 @@
       position: absolute;
       left: 14px;
       right: 14px;
-      top: 14px;
+      bottom: 14px;
       z-index: 3;
       display: flex;
       justify-content: space-between;
@@ -702,8 +702,8 @@
     .carousel-button,
     .carousel-dot {
       pointer-events: auto;
-      border: 1px solid rgba(255, 250, 240, 0.74);
-      background: rgba(8, 8, 6, 0.72);
+      border: 1px solid rgba(255, 250, 240, 0.86);
+      background: rgba(8, 8, 6, 0.86);
       color: var(--surface-strong);
       transition: background 180ms var(--ease), transform 180ms var(--ease);
     }
@@ -729,7 +729,7 @@
       gap: 6px;
       padding: 6px;
       border-radius: 999px;
-      background: rgba(8, 8, 6, 0.52);
+      background: rgba(8, 8, 6, 0.76);
       pointer-events: auto;
     }
 
@@ -1274,11 +1274,18 @@
       width: min(100%, 620px);
       max-height: calc(100svh - 40px);
       overflow: auto;
+      scrollbar-width: none;
+      -ms-overflow-style: none;
       border: 1px solid var(--ink);
       border-radius: 8px;
       background: var(--surface-strong);
       color: var(--ink);
       box-shadow: 14px 14px 0 var(--coral);
+    }
+
+    .modal-panel::-webkit-scrollbar {
+      width: 0;
+      height: 0;
     }
 
     .modal-head {
@@ -1342,8 +1349,17 @@
       background: rgba(8, 8, 6, 0.04);
     }
 
+    .donation-method.gofundme-method {
+      justify-items: center;
+      gap: 14px;
+      padding: 20px;
+      border-color: rgba(8, 8, 6, 0.14);
+      background: transparent;
+      text-align: center;
+    }
+
     .donation-method span {
-      color: rgba(8, 8, 6, 0.58);
+      color: rgba(8, 8, 6, 0.72);
       font-family: var(--mono);
       font-size: 10px;
       font-weight: 700;
@@ -1366,90 +1382,41 @@
       text-underline-offset: 4px;
     }
 
-    .stripe-donation-form {
+    .gofundme-embed-wrap {
       display: grid;
-      gap: 14px;
+      place-items: center;
+      width: min(100%, 360px);
+      min-height: 72px;
+      overflow: hidden;
     }
 
-    .donation-presets {
-      display: grid;
-      grid-template-columns: repeat(4, minmax(0, 1fr));
-      gap: 8px;
+    .donation-method .gofundme-button {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: min(100%, 360px);
+      min-height: 72px;
+      padding: 0 34px;
+      border: 0;
+      border-radius: 999px;
+      background: #244f35;
+      color: var(--accent);
+      font-family: var(--body);
+      font-size: clamp(21px, 4vw, 26px);
+      font-weight: 900;
+      line-height: 1;
+      text-align: center;
+      text-decoration: none;
+      box-shadow: none;
+      transition: background 180ms var(--ease), color 180ms var(--ease), transform 180ms var(--ease);
     }
 
-    .preset-button {
-      min-height: 42px;
-      border: 1px solid rgba(8, 8, 6, 0.2);
-      border-radius: 4px;
-      background: rgba(8, 8, 6, 0.05);
-      color: var(--ink);
-      font-family: var(--mono);
-      font-size: 11px;
-      font-weight: 700;
-    }
-
-    .preset-button.is-active,
-    .preset-button:hover,
-    .preset-button:focus-visible {
-      background: var(--accent);
+    .donation-method .gofundme-button:hover,
+    .donation-method .gofundme-button:focus-visible {
+      background: var(--ink);
+      color: var(--surface-strong);
       outline: 0;
-    }
-
-    .donation-fields {
-      display: grid;
-      grid-template-columns: minmax(0, 0.36fr) minmax(0, 0.64fr);
-      gap: 10px;
-    }
-
-    .donation-field {
-      display: grid;
-      gap: 6px;
-    }
-
-    .donation-field label {
-      color: rgba(8, 8, 6, 0.58);
-      font-family: var(--mono);
-      font-size: 10px;
-      font-weight: 700;
-      text-transform: uppercase;
-    }
-
-    .donation-field input {
-      width: 100%;
-      min-height: 44px;
-      padding: 10px 12px;
-      border: 1px solid rgba(8, 8, 6, 0.18);
-      border-radius: 4px;
-      background: rgba(8, 8, 6, 0.045);
-      color: var(--ink);
-      outline: 0;
-    }
-
-    .donation-field input:focus {
-      border-color: var(--coral);
-      box-shadow: 0 0 0 3px rgba(255, 90, 61, 0.15);
-    }
-
-    .fee-check {
-      display: grid;
-      grid-template-columns: 18px minmax(0, 1fr);
-      gap: 10px;
-      align-items: start;
-      padding: 12px;
-      border: 1px solid rgba(8, 8, 6, 0.16);
-      border-radius: 4px;
-      background: rgba(8, 8, 6, 0.04);
-      color: rgba(8, 8, 6, 0.72);
-      font-size: 13px;
-      font-weight: 650;
-      line-height: 1.32;
-    }
-
-    .fee-check input {
-      width: 18px;
-      height: 18px;
-      margin: 0;
-      accent-color: var(--coral);
+      transform: translateY(-1px);
     }
 
     .modal-actions {
@@ -1459,9 +1426,25 @@
       margin-top: 6px;
     }
 
+    .modal .button.secondary {
+      border-color: rgba(8, 8, 6, 0.62);
+      background: var(--ink);
+      color: var(--surface-strong);
+    }
+
+    .modal .button.secondary::before {
+      background: var(--accent);
+    }
+
+    .modal .button.secondary:hover,
+    .modal .button.secondary:focus-visible {
+      border-color: var(--ink);
+      color: var(--ink);
+    }
+
     .modal-copy {
       margin: 0;
-      color: rgba(8, 8, 6, 0.66);
+      color: rgba(8, 8, 6, 0.78);
       font-size: 15px;
       font-weight: 600;
     }
@@ -1574,11 +1557,6 @@
       .button-row .button,
       .modal-actions .button {
         width: 100%;
-      }
-
-      .donation-presets,
-      .donation-fields {
-        grid-template-columns: 1fr;
       }
 
       .hero-visual {
@@ -1737,6 +1715,7 @@
     <div class="nav-links">
       <a class="nav-link" href="#noahs-ark">Noah's Ark</a>
       <a class="nav-link" href="#over-ons">Over ons</a>
+      <a class="nav-link" href="#acties">Acties</a>
       <a class="nav-link" href="#doneer">Doneer</a>
     </div>
     <button class="button primary" type="button" data-open-donate>Geef nu</button>
@@ -1997,7 +1976,7 @@
         <div>
           <p class="micro-label">04 / Doneer</p>
           <h2 id="donate-heading">Help ons &euro;10.000 ophalen</h2>
-          <p>Doneer veilig via iDEAL, kaart, Tikkie of bankoverschrijving. Elk bedrag helpt om opvang, onderwijs en zorg dichterbij te brengen.</p>
+          <p>Doneer via GoFundMe. Elk bedrag helpt om opvang, onderwijs en zorg dichterbij te brengen.</p>
         </div>
         <button class="button dark" type="button" data-open-donate>Doneer nu</button>
       </div>
@@ -2021,37 +2000,12 @@
         <button class="modal-close" type="button" data-close-donate aria-label="Sluiten">&times;</button>
       </div>
       <div class="modal-body">
-        <div class="donation-method">
-          <span>Stripe checkout</span>
-          <form class="stripe-donation-form" id="stripe-donation-form">
-            <div class="donation-presets" aria-label="Kies bedrag">
-              <button class="preset-button is-active" type="button" data-donation-amount="10">&euro;10</button>
-              <button class="preset-button" type="button" data-donation-amount="25">&euro;25</button>
-              <button class="preset-button" type="button" data-donation-amount="50">&euro;50</button>
-              <button class="preset-button" type="button" data-donation-amount="100">&euro;100</button>
-            </div>
-            <div class="donation-fields">
-              <div class="donation-field">
-                <label for="stripe-amount">Bedrag (&euro;)</label>
-                <input id="stripe-amount" name="amount" type="number" min="1" max="5000" step="1" value="10" required>
-              </div>
-              <div class="donation-field">
-                <label for="stripe-name">Naam</label>
-                <input id="stripe-name" name="donor_name" type="text" placeholder="Mag leeg blijven">
-              </div>
-            </div>
-            <div class="donation-field">
-              <label for="stripe-note">Notitie</label>
-              <input id="stripe-note" name="note" type="text" placeholder="Bijvoorbeeld: succes met de reis">
-            </div>
-            <label class="fee-check" for="stripe-cover-fees">
-              <input id="stripe-cover-fees" name="cover_fees" type="checkbox" required>
-              <span>Ik ga akkoord dat de Stripe betaalkosten (<span id="stripe-fee-label">&euro;0,50</span>) bovenop mijn donatie worden gerekend.</span>
-            </label>
-            <div class="modal-actions">
-              <button class="button dark" type="submit">Doneer met iDEAL / kaart</button>
-            </div>
-          </form>
+        <div class="donation-method gofundme-method">
+          <span>GoFundMe</span>
+          <div class="gofundme-embed-wrap">
+            <a class="gofundme-button" href="https://www.gofundme.com/f/guido-de-bres-voor-noahs-ark?attribution_id=sl:cead965a-749b-4d4f-8b1c-ec9d6052efa0" target="_blank" rel="noreferrer">Nu doneren</a>
+          </div>
+          <p class="modal-copy">De knop opent de offici&euml;le GoFundMe betaalpagina voor deze actie.</p>
         </div>
         <div class="donation-method">
           <span>IBAN</span>
@@ -2065,7 +2019,7 @@
           <span>Tikkie</span>
           <a id="donate-tikkie" href="#" target="_blank" rel="noreferrer">[Tikkie link invullen]</a>
         </div>
-        <p class="modal-copy">Stripe stuurt je naar een veilige betaalpagina. IBAN en Tikkie blijven beschikbaar als alternatief.</p>
+        <p class="modal-copy">Gebruik je IBAN of Tikkie, vermeld dan je naam zodat we je kunnen bedanken en de donatiestand kunnen bijwerken.</p>
         <p class="modal-copy">Donaties kunnen aftrekbaar zijn van belasting. Vraag je belastingadviseur.</p>
         <div class="copy-status" id="copy-status" aria-live="polite"></div>
       </div>
@@ -2108,14 +2062,11 @@
       document.querySelectorAll(".goal-marquee").forEach(function (element) {
         element.textContent = "Doel " + currencyFormat.format(goal);
       });
-      document.getElementById("stripe-fee-label").textContent = currencyFormat.format((Number(config.STRIPE_FEE_CENTS || 50) || 0) / 100);
       document.getElementById("stat-days").textContent = numberFormat.format(rendered.days);
       fillDonateModal();
       bindDonateModal();
-      bindStripeDonation();
       bindNoahCarousel();
       renderFundraisingActions();
-      syncReturnedStripePayment();
       loadDonationStats();
       window.setInterval(loadDonationStats, 60000);
       runAnimations();
@@ -2345,121 +2296,6 @@
           modal.classList.remove("is-open");
           modal.setAttribute("aria-hidden", "true");
           document.body.classList.remove("modal-open");
-        }
-      }
-
-      function bindStripeDonation() {
-        var form = document.getElementById("stripe-donation-form");
-        if (!form) {
-          return;
-        }
-
-        var amountInput = document.getElementById("stripe-amount");
-        var feeInput = document.getElementById("stripe-cover-fees");
-        var status = document.getElementById("copy-status");
-        var submitButton = form.querySelector("button[type='submit']");
-        var presetButtons = Array.prototype.slice.call(form.querySelectorAll("[data-donation-amount]"));
-
-        presetButtons.forEach(function (button) {
-          button.addEventListener("click", function () {
-            amountInput.value = button.getAttribute("data-donation-amount");
-            presetButtons.forEach(function (preset) {
-              preset.classList.toggle("is-active", preset === button);
-            });
-          });
-        });
-
-        amountInput.addEventListener("input", function () {
-          presetButtons.forEach(function (preset) {
-            preset.classList.toggle("is-active", preset.getAttribute("data-donation-amount") === amountInput.value);
-          });
-        });
-
-        form.addEventListener("submit", async function (event) {
-          event.preventDefault();
-
-          if (window.location.protocol === "file:") {
-            status.textContent = "Start app.py om Stripe lokaal te testen.";
-            return;
-          }
-
-          var amount = Number(amountInput.value);
-          if (!amount || amount < 1) {
-            status.textContent = "Vul minimaal 1 euro in.";
-            return;
-          }
-
-          if (!feeInput.checked) {
-            status.textContent = "Vink aan dat je akkoord gaat met de Stripe betaalkosten.";
-            feeInput.focus();
-            return;
-          }
-
-          try {
-            submitButton.disabled = true;
-            status.textContent = "Betaalpagina maken...";
-            var response = await fetch("/api/stripe/checkout-session", {
-              method: "POST",
-              headers: { "Content-Type": "application/json" },
-              body: JSON.stringify({
-                amount: amount,
-                donor_name: document.getElementById("stripe-name").value.trim(),
-                note: document.getElementById("stripe-note").value.trim(),
-                cover_fees: feeInput.checked
-              })
-            });
-
-            if (!response.ok) {
-              throw await response.json();
-            }
-
-            var body = await response.json();
-            window.location.href = body.url;
-          } catch (error) {
-            status.textContent = error.error || "Stripe betaling kon niet starten.";
-          } finally {
-            submitButton.disabled = false;
-          }
-        });
-      }
-
-      async function syncReturnedStripePayment() {
-        if (window.location.protocol === "file:") {
-          return;
-        }
-
-        var params = new URLSearchParams(window.location.search);
-        var payment = params.get("payment");
-        var sessionId = params.get("session_id");
-        var status = document.getElementById("copy-status");
-
-        if (payment === "cancelled") {
-          status.textContent = "Betaling geannuleerd.";
-          return;
-        }
-
-        if (payment !== "success" || !sessionId) {
-          return;
-        }
-
-        try {
-          status.textContent = "Betaling controleren...";
-          var response = await fetch("/api/stripe/sync-session", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ session_id: sessionId })
-          });
-
-          if (!response.ok) {
-            throw await response.json();
-          }
-
-          status.textContent = "Dankjewel, betaling ontvangen.";
-          document.getElementById("live-status").textContent = "Betaling ontvangen. Donatiestand wordt bijgewerkt.";
-          await loadDonationStats();
-          window.history.replaceState({}, document.title, window.location.pathname + window.location.hash);
-        } catch (error) {
-          status.textContent = error.error || "Betaling kon nog niet worden bevestigd.";
         }
       }
 

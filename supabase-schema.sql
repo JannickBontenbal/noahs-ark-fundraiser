@@ -3,16 +3,8 @@ create table if not exists public.donations (
   amount numeric not null check (amount > 0),
   donor_name text,
   note text,
-  stripe_session_id text unique,
-  stripe_payment_intent text,
   created_at timestamptz not null default now()
 );
-
-alter table public.donations
-add column if not exists stripe_session_id text unique;
-
-alter table public.donations
-add column if not exists stripe_payment_intent text;
 
 alter table public.donations enable row level security;
 

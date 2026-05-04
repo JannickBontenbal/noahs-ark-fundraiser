@@ -10,9 +10,6 @@ window.NAF_CONFIG = {
   IBAN: "NL00 BANK 0000 0000 00",
   IBAN_NAME: "Stichting naam",
   TIKKIE_URL: "https://tikkie.me/pay/example",
-  STRIPE_PUBLISHABLE_KEY: "pk_test_your_publishable_key",
-  STRIPE_ENABLED: false,
-  STRIPE_FEE_CENTS: 50,
   ACTIONS: [
     {
       title: "Sponsorloop",

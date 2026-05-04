@@ -26,13 +26,3 @@ services:
         value: "Stichting [naam invullen]"
       - key: TIKKIE_URL
         value: "[Tikkie link invullen]"
-      - key: STRIPE_PUBLISHABLE_KEY
-        sync: false
-      - key: STRIPE_SECRET_KEY
-        sync: false
-      - key: STRIPE_WEBHOOK_SECRET
-        sync: false
-      - key: STRIPE_FEE_CENTS
-        value: "50"
-      - key: SITE_URL
-        sync: false
