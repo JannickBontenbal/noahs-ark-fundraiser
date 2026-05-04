@@ -234,6 +234,42 @@
       gap: 7px;
     }
 
+    .choice-row {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 10px;
+    }
+
+    .choice-card {
+      display: grid;
+      grid-template-columns: 18px minmax(0, 1fr);
+      gap: 10px;
+      align-items: center;
+      padding: 14px;
+      border: 1px solid rgba(8, 8, 6, 0.18);
+      border-radius: 6px;
+      background: rgba(8, 8, 6, 0.04);
+      color: var(--ink);
+      font-weight: 850;
+    }
+
+    .choice-card input {
+      width: 18px;
+      min-height: 18px;
+      height: 18px;
+      margin: 0;
+      accent-color: var(--coral);
+    }
+
+    .company-fields {
+      display: none;
+      gap: 12px;
+    }
+
+    .company-fields.is-visible {
+      display: grid;
+    }
+
     label {
       color: var(--coral);
     }
@@ -410,6 +446,28 @@
           <h2 id="form-heading">Groot bedrag overmaken</h2>
         </div>
         <form id="large-donation-form">
+          <div class="choice-row" aria-label="Type donateur">
+            <label class="choice-card" for="donor_type_private">
+              <input id="donor_type_private" name="donor_type" type="radio" value="particulier" checked>
+              <span>Particulier</span>
+            </label>
+            <label class="choice-card" for="donor_type_company">
+              <input id="donor_type_company" name="donor_type" type="radio" value="bedrijf">
+              <span>Bedrijf</span>
+            </label>
+          </div>
+          <div class="company-fields" id="company-fields">
+            <div class="field-row">
+              <div class="field">
+                <label for="company_name">Naam bedrijf</label>
+                <input id="company_name" name="company_name" type="text" autocomplete="organization">
+              </div>
+              <div class="field">
+                <label for="contact_person">Contactpersoon</label>
+                <input id="contact_person" name="contact_person" type="text">
+              </div>
+            </div>
+          </div>
           <div class="field-row">
             <div class="field">
               <label for="donor_name">Naam</label>
@@ -479,12 +537,16 @@
         </div>
         <div class="transfer-list">
           <div class="transfer-row">
+            <span class="micro-label">Overgemaakt op</span>
+            <strong id="transfer-date">Vandaag</strong>
+          </div>
+          <div class="transfer-row">
             <span class="micro-label">Rekeninghouder</span>
-            <strong id="iban-name">Noah's Ark</strong>
+            <strong id="iban-name">Noah's Ark Children's Ministry</strong>
           </div>
           <div class="transfer-row">
             <span class="micro-label">IBAN</span>
-            <strong id="iban-value">[IBAN invullen]</strong>
+            <strong id="iban-value">NL59RABO0362443955</strong>
             <button class="button copy-button" type="button" data-copy-target="iban-value">Kopieer IBAN</button>
           </div>
           <div class="transfer-row">
@@ -493,7 +555,7 @@
           </div>
           <div class="transfer-row">
             <span class="micro-label">Omschrijving</span>
-            <strong id="transfer-description">Nog invullen</strong>
+            <strong id="transfer-description">Actie Guido 2027</strong>
             <button class="button copy-button" type="button" data-copy-target="transfer-description">Kopieer omschrijving</button>
           </div>
         </div>
@@ -514,18 +576,22 @@
       var successBox = document.getElementById("success-box");
       var pdfLink = document.getElementById("pdf-link");
       var transferAmount = document.getElementById("transfer-amount");
-      var transferDescription = document.getElementById("transfer-description");
+      var companyFields = document.getElementById("company-fields");
+      var companyNameInput = document.getElementById("company_name");
+      var contactPersonInput = document.getElementById("contact_person");
 
-      document.getElementById("iban-name").textContent = config.IBAN_NAME || "Noah's Ark";
-      document.getElementById("iban-value").textContent = config.IBAN || "[IBAN invullen]";
+      document.getElementById("transfer-date").textContent = formatDutchDate(new Date());
       form.addEventListener("submit", handleSubmit);
       form.amount.addEventListener("input", updateTransferSummary);
-      form.description_primary.addEventListener("input", updateTransferSummary);
+      document.querySelectorAll("[name='donor_type']").forEach(function (input) {
+        input.addEventListener("change", syncDonorType);
+      });
       document.querySelectorAll("[data-copy-target]").forEach(function (button) {
         button.addEventListener("click", function () {
           copyText(document.getElementById(button.getAttribute("data-copy-target")).textContent);
         });
       });
+      syncDonorType();
       updateTransferSummary();
 
       function cleanUrl(url) {
@@ -536,13 +602,29 @@
         return (apiBase || "") + path;
       }
 
+      function formatDutchDate(date) {
+        return [
+          String(date.getDate()).padStart(2, "0"),
+          String(date.getMonth() + 1).padStart(2, "0"),
+          date.getFullYear()
+        ].join("-");
+      }
+
+      function syncDonorType() {
+        var isCompany = form.donor_type.value === "bedrijf";
+        companyFields.classList.toggle("is-visible", isCompany);
+        companyNameInput.required = isCompany;
+        contactPersonInput.required = isCompany;
+        form.donor_name.required = !isCompany;
+        form.donor_name.parentElement.style.display = isCompany ? "none" : "grid";
+      }
+
       function updateTransferSummary() {
         var amount = Number(form.amount.value);
         transferAmount.textContent = amount > 0 ? new Intl.NumberFormat("nl-NL", {
           style: "currency",
           currency: "EUR"
         }).format(amount) : "Nog invullen";
-        transferDescription.textContent = form.description_primary.value.trim() || "Nog invullen";
       }
 
       async function copyText(value) {
@@ -581,7 +663,10 @@
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({
               amount: amount,
+              donor_type: form.donor_type.value,
               donor_name: form.donor_name.value.trim(),
+              company_name: form.company_name.value.trim(),
+              contact_person: form.contact_person.value.trim(),
               email: form.email.value.trim(),
               phone: form.phone.value.trim(),
               street: form.street.value.trim(),

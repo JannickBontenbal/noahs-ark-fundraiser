@@ -734,15 +734,17 @@
               <thead>
                 <tr>
                   <th>Datum</th>
+                  <th>Type</th>
                   <th>Naam</th>
                   <th>Bedrag</th>
                   <th>Omschrijving 1</th>
                   <th>PDF</th>
+                  <th>Verwijder</th>
                 </tr>
               </thead>
               <tbody id="large-forms-body">
                 <tr>
-                  <td class="empty-row" colspan="5">Nog geen formulieren geladen.</td>
+                  <td class="empty-row" colspan="7">Nog geen formulieren geladen.</td>
                 </tr>
               </tbody>
             </table>
@@ -1095,7 +1097,7 @@
           var emptyRow = document.createElement("tr");
           var emptyCell = document.createElement("td");
           emptyCell.className = "empty-row";
-          emptyCell.colSpan = 5;
+          emptyCell.colSpan = 7;
           emptyCell.textContent = "Nog geen grote-bedrag formulieren.";
           emptyRow.appendChild(emptyCell);
           largeFormsBody.appendChild(emptyRow);
@@ -1104,8 +1106,12 @@
 
         rows.forEach(function (formRow) {
           var row = document.createElement("tr");
+          var displayName = formRow.donor_type === "bedrijf"
+            ? (formRow.company_name || formRow.donor_name || "") + (formRow.contact_person ? " (" + formRow.contact_person + ")" : "")
+            : (formRow.donor_name || "");
           row.appendChild(cell(formatDate(formRow.created_at)));
-          row.appendChild(cell(formRow.donor_name || ""));
+          row.appendChild(cell(formRow.donor_type === "bedrijf" ? "Bedrijf" : "Particulier"));
+          row.appendChild(cell(displayName));
           row.appendChild(cell(currencyFormat.format(Number(formRow.amount) || 0)));
           row.appendChild(cell(formRow.description_primary || ""));
 
@@ -1118,6 +1124,17 @@
           link.textContent = "Open PDF";
           pdfCell.appendChild(link);
           row.appendChild(pdfCell);
+
+          var deleteCell = document.createElement("td");
+          var deleteButton = document.createElement("button");
+          deleteButton.className = "button danger";
+          deleteButton.type = "button";
+          deleteButton.textContent = "Verwijder";
+          deleteButton.addEventListener("click", function () {
+            deleteLargeForm(formRow.id);
+          });
+          deleteCell.appendChild(deleteButton);
+          row.appendChild(deleteCell);
           largeFormsBody.appendChild(row);
         });
       }
@@ -1208,6 +1225,28 @@
           handleAuthError(error);
           formMessage.className = "message error";
           formMessage.textContent = error.message || "Verwijderen is mislukt.";
+        }
+      }
+
+      async function deleteLargeForm(id) {
+        if (!window.confirm("Dit formulier en de gekoppelde donatie verwijderen?")) {
+          return;
+        }
+
+        try {
+          var response = await fetch(apiPath("/api/large-donation-forms/" + encodeURIComponent(id)), {
+            method: "DELETE",
+            credentials: "include"
+          });
+          if (!response.ok) {
+            throw await httpError(response, "Formulier verwijderen is mislukt.");
+          }
+          largeFormsMessage.textContent = "Formulier verwijderd.";
+          await Promise.all([loadAdminData(), loadLargeForms()]);
+        } catch (error) {
+          handleAuthError(error);
+          largeFormsMessage.className = "message error";
+          largeFormsMessage.textContent = error.message || "Formulier verwijderen is mislukt.";
         }
       }
 

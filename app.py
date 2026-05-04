@@ -151,6 +151,21 @@ def clean_text(value, limit=500):
     return str(value or "").strip()[:limit]
 
 
+def format_dutch_date(value=None):
+    from datetime import datetime
+
+    if not value:
+        date = datetime.now()
+    elif isinstance(value, str):
+        try:
+            date = datetime.fromisoformat(value.replace("Z", "+00:00"))
+        except ValueError:
+            date = datetime.now()
+    else:
+        date = value
+    return date.strftime("%d-%m-%Y")
+
+
 def admin_required():
     if not session.get("admin"):
         return jsonify({"error": "Niet ingelogd."}), 401
@@ -322,8 +337,21 @@ def create_large_donation_form():
     if amount <= 0:
         return jsonify({"error": "Bedrag moet groter zijn dan 0."}), 400
 
+    donor_type = clean_text(payload.get("donor_type"), 20) or "particulier"
+    if donor_type not in {"particulier", "bedrijf"}:
+        donor_type = "particulier"
+
     donor_name = clean_text(payload.get("donor_name"), 160)
+    company_name = clean_text(payload.get("company_name"), 180)
+    contact_person = clean_text(payload.get("contact_person"), 160)
     description_primary = clean_text(payload.get("description_primary"), 220)
+    if donor_type == "bedrijf":
+        if not company_name:
+            return jsonify({"error": "Bedrijfsnaam is verplicht."}), 400
+        if not contact_person:
+            return jsonify({"error": "Contactpersoon is verplicht."}), 400
+        donor_name = company_name
+
     if not donor_name:
         return jsonify({"error": "Naam is verplicht."}), 400
     if not description_primary:
@@ -345,6 +373,9 @@ def create_large_donation_form():
 
     form_row = {
         "donation_id": donation_id,
+        "donor_type": donor_type,
+        "company_name": company_name or None,
+        "contact_person": contact_person or None,
         "amount": amount,
         "donor_name": donor_name,
         "email": clean_text(payload.get("email"), 180) or None,
@@ -416,6 +447,34 @@ def large_donation_form_pdf(form_id):
     )
 
 
+@app.delete("/api/large-donation-forms/<form_id>")
+def delete_large_donation_form(form_id):
+    blocked = admin_required()
+    if blocked:
+        return blocked
+
+    if not has_admin_config():
+        return jsonify({"error": "SUPABASE_SERVICE_KEY ontbreekt in .env."}), 500
+
+    response = (
+        supabase_admin()
+        .table("large_donation_forms")
+        .select("id, donation_id")
+        .eq("id", form_id)
+        .limit(1)
+        .execute()
+    )
+    if not response.data:
+        return jsonify({"error": "Formulier niet gevonden."}), 404
+
+    donation_id = response.data[0].get("donation_id")
+    if donation_id:
+        supabase_admin().table("donations").delete().eq("id", donation_id).execute()
+    else:
+        supabase_admin().table("large_donation_forms").delete().eq("id", form_id).execute()
+    return jsonify({"ok": True})
+
+
 def build_large_donation_pdf(row):
     from reportlab.lib import colors
     from reportlab.lib.pagesizes import A4
@@ -437,6 +496,23 @@ def build_large_donation_pdf(row):
             pdf.drawString(left + 58 * mm, line, str(value))
         line -= 9 * mm
 
+    def draw_wrapped(text, size=10):
+        nonlocal line
+        pdf.setFont("Helvetica", size)
+        words = str(text).split()
+        current = ""
+        for word in words:
+            next_line = (current + " " + word).strip()
+            if pdf.stringWidth(next_line, "Helvetica", size) > (width - (2 * left)):
+                pdf.drawString(left, line, current)
+                line -= 6 * mm
+                current = word
+            else:
+                current = next_line
+        if current:
+            pdf.drawString(left, line, current)
+            line -= 6 * mm
+
     pdf.setFillColor(colors.HexColor("#080806"))
     pdf.rect(0, 0, width, height, fill=1, stroke=0)
     pdf.setFillColor(colors.HexColor("#f8efd8"))
@@ -455,16 +531,28 @@ def build_large_donation_pdf(row):
     line -= 14 * mm
     pdf.setFillColor(colors.HexColor("#080806"))
 
+    draw_line("Naam afzender", "Noah's Ark Children and Youth Ministry Uganda")
+    draw_line("Adres", "Batelier 14")
+    draw_line("Postcode + woonplaats", "3323 JS Sliedrecht")
+    draw_line("E-mail", "nederland@nacmu.org")
+    draw_line("Overgemaakt op", format_dutch_date(row.get("created_at")))
+    line -= 3 * mm
+
     draw_line("Formuliernummer", str(row.get("id", ""))[:18])
-    draw_line("Naam", row.get("donor_name", ""))
+    draw_line("Type", "Bedrijf" if row.get("donor_type") == "bedrijf" else "Particulier")
+    if row.get("donor_type") == "bedrijf":
+        draw_line("Naam bedrijf", row.get("company_name", ""))
+        draw_line("Contactpersoon", row.get("contact_person", ""))
+    else:
+        draw_line("Naam", row.get("donor_name", ""))
     draw_line("E-mail", row.get("email", ""))
     draw_line("Telefoon", row.get("phone", ""))
     draw_line("Adres", row.get("street", ""))
     draw_line("Postcode / plaats", (row.get("postal_code") or "") + " " + (row.get("city") or ""))
     draw_line("Land", row.get("country", ""))
     draw_line("Bedrag", "EUR " + str(row.get("amount", "")), bold=True)
-    draw_line("Omschrijving 1", row.get("description_primary", ""), bold=True)
-    draw_line("Omschrijving 2", row.get("description_secondary", ""))
+    draw_line("Omschrijving donateur", row.get("description_primary", ""), bold=True)
+    draw_line("Omschrijving betaling", "Actie Guido 2027")
     draw_line("Jaar", str(row.get("tax_year", 2027)))
 
     line -= 4 * mm
@@ -474,14 +562,13 @@ def build_large_donation_pdf(row):
     pdf.setFont("Helvetica-Bold", 11)
     pdf.drawString(left, line, "Betaalinstructie")
     line -= 7 * mm
-    pdf.setFont("Helvetica", 10)
-    pdf.drawString(left, line, "Dit formulier voert geen bankbetaling uit.")
-    line -= 7 * mm
-    pdf.drawString(left, line, "Maak het bedrag zelf over via je bank naar de IBAN van Noah's Ark.")
-    line -= 7 * mm
-    pdf.drawString(left, line, "Gebruik Omschrijving 1 als betalingsomschrijving.")
+    draw_line("Bankrekeningnummer", "NL 59 RABO 0362 4439 55")
+    draw_line("Ten name van", "Noah's Ark Children's Ministry")
+    draw_line("Omschrijving", "Actie Guido 2027")
     line -= 9 * mm
-    pdf.drawString(left, line, "Deze directe donatie kan fiscaal aftrekbaar zijn. Bewaar dit formulier bij je administratie.")
+    draw_wrapped("Dit formulier voert geen bankbetaling uit. Maak het bedrag zelf over via je bank. Hartelijk dank voor uw steun aan dit project!")
+    line -= 3 * mm
+    draw_wrapped("Deze directe donatie kan fiscaal aftrekbaar zijn. Bewaar dit formulier bij je administratie.")
 
     pdf.showPage()
     pdf.save()
