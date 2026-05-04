@@ -355,7 +355,7 @@ def create_large_donation_form():
     if not donor_name:
         return jsonify({"error": "Naam is verplicht."}), 400
     if not description_primary:
-        return jsonify({"error": "Omschrijving 1 is verplicht."}), 400
+        return jsonify({"error": "Omschrijving is verplicht."}), 400
     if not bool(payload.get("confirmed_transfer")):
         return jsonify({"error": "Bevestig dat je het bedrag direct overmaakt."}), 400
 
@@ -484,60 +484,85 @@ def build_large_donation_pdf(row):
     buffer = io.BytesIO()
     pdf = canvas.Canvas(buffer, pagesize=A4)
     width, height = A4
-    left = 20 * mm
-    line = height - 22 * mm
+    left = 14 * mm
+    right = width - 14 * mm
+    label_width = 48 * mm
+    line = height - 16 * mm
 
     def draw_line(label, value="", size=10, bold=False):
         nonlocal line
-        pdf.setFont("Helvetica-Bold" if bold else "Helvetica", size)
+        pdf.setFillColor(colors.HexColor("#080806"))
+        pdf.setFont("Helvetica-Bold", size)
         pdf.drawString(left, line, str(label))
         if value:
-            pdf.setFont("Helvetica", size)
-            pdf.drawString(left + 58 * mm, line, str(value))
-        line -= 9 * mm
+            draw_wrapped_at(left + label_width, line, str(value), right - left - label_width, size, bold)
+        line -= 7 * mm
+
+    def draw_section(title):
+        nonlocal line
+        line -= 4 * mm
+        pdf.setStrokeColor(colors.HexColor("#d7c9a6"))
+        pdf.setLineWidth(0.7)
+        pdf.line(left, line, right, line)
+        line -= 6 * mm
+        pdf.setFillColor(colors.HexColor("#ff5a3d"))
+        pdf.setFont("Helvetica-Bold", 11)
+        pdf.drawString(left, line, title.upper())
+        line -= 8 * mm
 
     def draw_wrapped(text, size=10):
         nonlocal line
+        line = draw_wrapped_at(left, line, str(text), right - left, size, False)
+        line -= 1 * mm
+
+    def draw_wrapped_at(x, y, text, max_width, size=10, bold=False):
+        font = "Helvetica-Bold" if bold else "Helvetica"
+        pdf.setFillColor(colors.HexColor("#080806"))
+        pdf.setFont(font, size)
+        current_y = y
         pdf.setFont("Helvetica", size)
         words = str(text).split()
         current = ""
         for word in words:
             next_line = (current + " " + word).strip()
-            if pdf.stringWidth(next_line, "Helvetica", size) > (width - (2 * left)):
-                pdf.drawString(left, line, current)
-                line -= 6 * mm
+            if pdf.stringWidth(next_line, font, size) > max_width and current:
+                pdf.setFont(font, size)
+                pdf.drawString(x, current_y, current)
+                current_y -= 5 * mm
                 current = word
             else:
                 current = next_line
         if current:
-            pdf.drawString(left, line, current)
-            line -= 6 * mm
+            pdf.setFont(font, size)
+            pdf.drawString(x, current_y, current)
+            current_y -= 5 * mm
+        return current_y
 
-    pdf.setFillColor(colors.HexColor("#080806"))
-    pdf.rect(0, 0, width, height, fill=1, stroke=0)
     pdf.setFillColor(colors.HexColor("#f8efd8"))
-    pdf.rect(12 * mm, 12 * mm, width - 24 * mm, height - 24 * mm, fill=1, stroke=0)
+    pdf.rect(0, 0, width, height, fill=1, stroke=0)
     pdf.setFillColor(colors.HexColor("#080806"))
-    pdf.setStrokeColor(colors.HexColor("#080806"))
-    pdf.setLineWidth(1.2)
-    pdf.rect(18 * mm, 18 * mm, width - 36 * mm, height - 36 * mm, fill=0, stroke=1)
 
-    pdf.setFont("Helvetica-Bold", 24)
+    pdf.setFont("Helvetica-Bold", 26)
     pdf.drawString(left, line, "FACTUUR UGANDA")
-    line -= 9 * mm
+    line -= 8 * mm
     pdf.setFillColor(colors.HexColor("#ff5a3d"))
     pdf.setFont("Helvetica-Bold", 11)
     pdf.drawString(left, line, "Noah's Ark donatieformulier 2027")
-    line -= 14 * mm
+    line -= 5 * mm
+    pdf.setStrokeColor(colors.HexColor("#080806"))
+    pdf.setLineWidth(1)
+    pdf.line(left, line, right, line)
+    line -= 9 * mm
     pdf.setFillColor(colors.HexColor("#080806"))
 
+    draw_section("Afzender")
     draw_line("Naam afzender", "Noah's Ark Children and Youth Ministry Uganda")
     draw_line("Adres", "Batelier 14")
     draw_line("Postcode + woonplaats", "3323 JS Sliedrecht")
     draw_line("E-mail", "nederland@nacmu.org")
     draw_line("Overgemaakt op", format_dutch_date(row.get("created_at")))
-    line -= 3 * mm
 
+    draw_section("Donateur")
     draw_line("Formuliernummer", str(row.get("id", ""))[:18])
     draw_line("Type", "Bedrijf" if row.get("donor_type") == "bedrijf" else "Particulier")
     if row.get("donor_type") == "bedrijf":
@@ -550,24 +575,18 @@ def build_large_donation_pdf(row):
     draw_line("Adres", row.get("street", ""))
     draw_line("Postcode / plaats", (row.get("postal_code") or "") + " " + (row.get("city") or ""))
     draw_line("Land", row.get("country", ""))
+
+    draw_section("Donatie")
     draw_line("Bedrag", "EUR " + str(row.get("amount", "")), bold=True)
-    draw_line("Omschrijving donateur", row.get("description_primary", ""), bold=True)
+    draw_line("Omschrijving", row.get("description_primary", ""), bold=True)
     draw_line("Omschrijving betaling", "Actie Guido 2027")
     draw_line("Jaar", str(row.get("tax_year", 2027)))
 
-    line -= 4 * mm
-    pdf.setStrokeColor(colors.HexColor("#080806"))
-    pdf.line(left, line, width - left, line)
-    line -= 9 * mm
-    pdf.setFont("Helvetica-Bold", 11)
-    pdf.drawString(left, line, "Betaalinstructie")
-    line -= 7 * mm
+    draw_section("Betaalinstructie")
     draw_line("Bankrekeningnummer", "NL 59 RABO 0362 4439 55")
     draw_line("Ten name van", "Noah's Ark Children's Ministry")
     draw_line("Omschrijving", "Actie Guido 2027")
-    line -= 9 * mm
     draw_wrapped("Dit formulier voert geen bankbetaling uit. Maak het bedrag zelf over via je bank. Hartelijk dank voor uw steun aan dit project!")
-    line -= 3 * mm
     draw_wrapped("Deze directe donatie kan fiscaal aftrekbaar zijn. Bewaar dit formulier bij je administratie.")
 
     pdf.showPage()

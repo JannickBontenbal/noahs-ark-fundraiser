@@ -274,6 +274,64 @@
       color: var(--coral);
     }
 
+    .label-row {
+      display: flex;
+      gap: 8px;
+      align-items: center;
+      width: fit-content;
+      color: var(--coral);
+      font-family: var(--mono);
+      font-size: 11px;
+      font-weight: 700;
+      text-transform: uppercase;
+    }
+
+    .field-info {
+      position: relative;
+      display: inline-grid;
+      place-items: center;
+      width: 18px;
+      height: 18px;
+      border: 1px solid currentColor;
+      border-radius: 50%;
+      background: transparent;
+      color: var(--coral);
+      font-family: var(--mono);
+      font-size: 10px;
+      font-weight: 900;
+      line-height: 1;
+      cursor: help;
+    }
+
+    .field-info::after {
+      content: attr(data-tooltip);
+      position: absolute;
+      left: 50%;
+      bottom: calc(100% + 8px);
+      z-index: 2;
+      width: min(280px, 72vw);
+      padding: 10px 12px;
+      border-radius: 6px;
+      background: var(--ink);
+      color: var(--surface-strong);
+      font-family: var(--body);
+      font-size: 13px;
+      font-weight: 700;
+      line-height: 1.28;
+      text-align: left;
+      text-transform: none;
+      opacity: 0;
+      pointer-events: none;
+      transform: translate(-50%, 6px);
+      transition: opacity 160ms var(--ease), transform 160ms var(--ease);
+    }
+
+    .field-info:hover::after,
+    .field-info:focus-visible::after {
+      opacity: 1;
+      transform: translate(-50%, 0);
+    }
+
     input,
     textarea {
       width: 100%;
@@ -507,7 +565,10 @@
             <input id="country" name="country" type="text" value="Nederland" autocomplete="country-name">
           </div>
           <div class="field">
-            <label for="description_primary">Omschrijving 1</label>
+            <div class="label-row">
+              <label for="description_primary">Omschrijving</label>
+              <button class="field-info" type="button" aria-label="Uitleg over omschrijving" data-tooltip="Gebruik de omschrijving om te vertellen voor welke actie je doneert, of dat je gewoon algemeen wilt doneren.">i</button>
+            </div>
             <textarea id="description_primary" name="description_primary" required placeholder="Vul hier je eigen omschrijving in"></textarea>
           </div>
           <label class="check-field" for="confirmed_transfer">
