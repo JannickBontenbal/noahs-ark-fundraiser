@@ -409,6 +409,7 @@
       align-content: center;
       min-width: 0;
       padding: 18px 0;
+      overflow: hidden;
     }
 
     .progress-panel {
@@ -431,6 +432,7 @@
       color: var(--ink);
       box-shadow: 18px 18px 0 var(--sky);
       transform: rotate(1.3deg);
+      max-width: calc(100% - 18px);
     }
 
     .progress-label {
@@ -1428,6 +1430,28 @@
       box-shadow: 0 0 0 3px rgba(255, 90, 61, 0.15);
     }
 
+    .fee-check {
+      display: grid;
+      grid-template-columns: 18px minmax(0, 1fr);
+      gap: 10px;
+      align-items: start;
+      padding: 12px;
+      border: 1px solid rgba(8, 8, 6, 0.16);
+      border-radius: 4px;
+      background: rgba(8, 8, 6, 0.04);
+      color: rgba(8, 8, 6, 0.72);
+      font-size: 13px;
+      font-weight: 650;
+      line-height: 1.32;
+    }
+
+    .fee-check input {
+      width: 18px;
+      height: 18px;
+      margin: 0;
+      accent-color: var(--coral);
+    }
+
     .modal-actions {
       display: flex;
       flex-wrap: wrap;
@@ -1787,11 +1811,11 @@
         <span>Guido de Br&egrave;s</span>
         <span><i>Van niemand tot iemand</i></span>
         <span>Uganda 2027</span>
-        <span>Doel &euro;10.000</span>
+        <span class="goal-marquee">Doel &euro;10.000</span>
         <span>Guido de Br&egrave;s</span>
         <span><i>Van niemand tot iemand</i></span>
         <span>Uganda 2027</span>
-        <span>Doel &euro;10.000</span>
+        <span class="goal-marquee">Doel &euro;10.000</span>
       </div>
     </div>
 
@@ -2020,6 +2044,10 @@
               <label for="stripe-note">Notitie</label>
               <input id="stripe-note" name="note" type="text" placeholder="Bijvoorbeeld: succes met de reis">
             </div>
+            <label class="fee-check" for="stripe-cover-fees">
+              <input id="stripe-cover-fees" name="cover_fees" type="checkbox" required>
+              <span>Ik ga akkoord dat de Stripe betaalkosten (<span id="stripe-fee-label">&euro;0,50</span>) bovenop mijn donatie worden gerekend.</span>
+            </label>
             <div class="modal-actions">
               <button class="button dark" type="submit">Doneer met iDEAL / kaart</button>
             </div>
@@ -2077,6 +2105,10 @@
       progressRing.style.strokeDashoffset = circumference;
       document.getElementById("progress-goal").textContent = "van " + currencyFormat.format(goal);
       document.getElementById("donate-heading").textContent = "Help ons " + currencyFormat.format(goal) + " ophalen";
+      document.querySelectorAll(".goal-marquee").forEach(function (element) {
+        element.textContent = "Doel " + currencyFormat.format(goal);
+      });
+      document.getElementById("stripe-fee-label").textContent = currencyFormat.format((Number(config.STRIPE_FEE_CENTS || 50) || 0) / 100);
       document.getElementById("stat-days").textContent = numberFormat.format(rendered.days);
       fillDonateModal();
       bindDonateModal();
@@ -2323,6 +2355,7 @@
         }
 
         var amountInput = document.getElementById("stripe-amount");
+        var feeInput = document.getElementById("stripe-cover-fees");
         var status = document.getElementById("copy-status");
         var submitButton = form.querySelector("button[type='submit']");
         var presetButtons = Array.prototype.slice.call(form.querySelectorAll("[data-donation-amount]"));
@@ -2356,6 +2389,12 @@
             return;
           }
 
+          if (!feeInput.checked) {
+            status.textContent = "Vink aan dat je akkoord gaat met de Stripe betaalkosten.";
+            feeInput.focus();
+            return;
+          }
+
           try {
             submitButton.disabled = true;
             status.textContent = "Betaalpagina maken...";
@@ -2365,7 +2404,8 @@
               body: JSON.stringify({
                 amount: amount,
                 donor_name: document.getElementById("stripe-name").value.trim(),
-                note: document.getElementById("stripe-note").value.trim()
+                note: document.getElementById("stripe-note").value.trim(),
+                cover_fees: feeInput.checked
               })
             });
 

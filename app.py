@@ -62,6 +62,7 @@ ADMIN_PASSWORD_HASH = os.environ.get("ADMIN_PASSWORD_HASH", "")
 STRIPE_PUBLISHABLE_KEY = os.environ.get("STRIPE_PUBLISHABLE_KEY", "")
 STRIPE_SECRET_KEY = os.environ.get("STRIPE_SECRET_KEY", "")
 STRIPE_WEBHOOK_SECRET = os.environ.get("STRIPE_WEBHOOK_SECRET", "")
+STRIPE_FEE_CENTS = int(os.environ.get("STRIPE_FEE_CENTS", "50"))
 
 if STRIPE_SECRET_KEY:
     stripe.api_key = STRIPE_SECRET_KEY
@@ -199,7 +200,11 @@ def donation_from_checkout_session(session_id: str):
     customer_details = checkout_session.get("customer_details") or {}
     donor_name = metadata.get("donor_name") or customer_details.get("name") or None
     note = metadata.get("note") or None
-    amount = (checkout_session.get("amount_total") or 0) / 100
+    try:
+        donation_cents = int(metadata.get("donation_amount_cents") or 0)
+    except (TypeError, ValueError):
+        donation_cents = 0
+    amount = (donation_cents or checkout_session.get("amount_total") or 0) / 100
     payment_intent = checkout_session.get("payment_intent")
 
     row = {
@@ -252,6 +257,7 @@ def config_js():
         "ACTIONS": normalize_actions(get_setting("ACTIONS", DEFAULT_ACTIONS)),
         "STRIPE_PUBLISHABLE_KEY": STRIPE_PUBLISHABLE_KEY,
         "STRIPE_ENABLED": has_stripe_config(),
+        "STRIPE_FEE_CENTS": STRIPE_FEE_CENTS,
     }
     body = "window.NAF_CONFIG = " + json.dumps(config, ensure_ascii=True) + ";\n"
     return Response(body, mimetype="application/javascript")
@@ -394,9 +400,35 @@ def create_stripe_checkout_session():
     except ValueError as error:
         return jsonify({"error": str(error)}), 400
 
+    if not bool(payload.get("cover_fees")):
+        return jsonify({"error": "Ga akkoord met de Stripe betaalkosten om door te gaan."}), 400
+
     donor_name = str(payload.get("donor_name") or "").strip()[:120]
     note = str(payload.get("note") or "").strip()[:500]
     base_url = site_url()
+    line_items = [{
+        "price_data": {
+            "currency": "eur",
+            "product_data": {
+                "name": "Donatie Noah's Ark Uganda",
+                "description": "Guido de Bres fundraiser",
+            },
+            "unit_amount": cents,
+        },
+        "quantity": 1,
+    }]
+    if STRIPE_FEE_CENTS > 0:
+        line_items.append({
+            "price_data": {
+                "currency": "eur",
+                "product_data": {
+                    "name": "Stripe betaalkosten",
+                    "description": "Bijdrage zodat je donatiebedrag volledig meetelt.",
+                },
+                "unit_amount": STRIPE_FEE_CENTS,
+            },
+            "quantity": 1,
+        })
 
     checkout_session = stripe.checkout.Session.create(
         mode="payment",
@@ -404,27 +436,23 @@ def create_stripe_checkout_session():
         submit_type="donate",
         success_url=base_url + "/?payment=success&session_id={CHECKOUT_SESSION_ID}",
         cancel_url=base_url + "/?payment=cancelled#doneer",
-        line_items=[{
-            "price_data": {
-                "currency": "eur",
-                "product_data": {
-                    "name": "Donatie Noah's Ark Uganda",
-                    "description": "Guido de Bres fundraiser",
-                },
-                "unit_amount": cents,
-            },
-            "quantity": 1,
-        }],
+        line_items=line_items,
         metadata={
             "donor_name": donor_name,
             "note": note,
             "source": "website",
+            "donation_amount_cents": str(cents),
+            "stripe_fee_cents": str(STRIPE_FEE_CENTS),
+            "cover_fees": "true",
         },
         payment_intent_data={
             "metadata": {
                 "donor_name": donor_name,
                 "note": note,
                 "source": "website",
+                "donation_amount_cents": str(cents),
+                "stripe_fee_cents": str(STRIPE_FEE_CENTS),
+                "cover_fees": "true",
             }
         },
     )

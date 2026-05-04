@@ -12,6 +12,7 @@ window.NAF_CONFIG = {
   TIKKIE_URL: "https://tikkie.me/pay/example",
   STRIPE_PUBLISHABLE_KEY: "pk_test_your_publishable_key",
   STRIPE_ENABLED: false,
+  STRIPE_FEE_CENTS: 50,
   ACTIONS: [
     {
       title: "Sponsorloop",

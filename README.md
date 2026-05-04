@@ -89,6 +89,7 @@ TIKKIE_URL=your-tikkie-link
 STRIPE_PUBLISHABLE_KEY=pk_test_your-publishable-key
 STRIPE_SECRET_KEY=sk_test_your-secret-key
 STRIPE_WEBHOOK_SECRET=whsec_your-webhook-secret
+STRIPE_FEE_CENTS=50
 SITE_URL=https://your-render-url.onrender.com
 ```
 
@@ -99,6 +100,8 @@ Free Render services can sleep after inactivity. The first request after a quiet
 Stripe Checkout is used for iDEAL/card donations. The browser sends the chosen amount to Flask, Flask creates a Checkout Session, and successful payments are verified server-side before a donation row is inserted in Supabase.
 
 Do not commit Stripe secret keys. Put them in `.env` locally and Render environment variables in production. After adding `stripe_session_id` and `stripe_payment_intent`, re-run `supabase-schema.sql` in Supabase SQL Editor so paid Stripe sessions are recorded only once.
+
+`STRIPE_FEE_CENTS` is the fixed betaalkosten contribution added on top of the donation when donors pay through Stripe. The donation counter records only the donation amount, not this fee contribution.
 
 For webhook automation, add a Stripe webhook endpoint:
 
