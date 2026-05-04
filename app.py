@@ -1,4 +1,5 @@
 import hashlib
+import io
 import json
 import os
 from pathlib import Path
@@ -146,6 +147,10 @@ def password_hash(password: str) -> str:
     return hashlib.sha256(password.encode("utf-8")).hexdigest()
 
 
+def clean_text(value, limit=500):
+    return str(value or "").strip()[:limit]
+
+
 def admin_required():
     if not session.get("admin"):
         return jsonify({"error": "Niet ingelogd."}), 401
@@ -162,6 +167,12 @@ def index():
 @app.get("/admin.html")
 def admin_page():
     return send_from_directory(BASE_DIR, "admin.html")
+
+
+@app.get("/grote-donatie")
+@app.get("/grote-donatie.html")
+def large_donation_page():
+    return send_from_directory(BASE_DIR, "large-donation.html")
 
 
 @app.get("/config.js")
@@ -295,6 +306,186 @@ def add_donation():
     }
     response = supabase_admin().table("donations").insert(row).execute()
     return jsonify({"donation": response.data[0] if response.data else row}), 201
+
+
+@app.post("/api/large-donation-forms")
+def create_large_donation_form():
+    if not has_admin_config():
+        return jsonify({"error": "SUPABASE_SERVICE_KEY ontbreekt in .env."}), 500
+
+    payload = request.get_json(silent=True) or {}
+    try:
+        amount = float(payload.get("amount"))
+    except (TypeError, ValueError):
+        return jsonify({"error": "Bedrag is ongeldig."}), 400
+
+    if amount <= 0:
+        return jsonify({"error": "Bedrag moet groter zijn dan 0."}), 400
+
+    donor_name = clean_text(payload.get("donor_name"), 160)
+    description_primary = clean_text(payload.get("description_primary"), 220)
+    if not donor_name:
+        return jsonify({"error": "Naam is verplicht."}), 400
+    if not description_primary:
+        return jsonify({"error": "Omschrijving 1 is verplicht."}), 400
+    if not bool(payload.get("confirmed_transfer")):
+        return jsonify({"error": "Bevestig dat je het bedrag direct overmaakt."}), 400
+
+    donation_row = {
+        "amount": amount,
+        "donor_name": donor_name,
+        "note": "Groot bedrag formulier 2027: " + description_primary,
+    }
+    try:
+        donation_response = supabase_admin().table("donations").insert(donation_row).execute()
+    except Exception as error:
+        return jsonify({"error": "Kon donatie niet opslaan. Controleer Supabase en SUPABASE_SERVICE_KEY. " + str(error)}), 500
+    donation = donation_response.data[0] if donation_response.data else donation_row
+    donation_id = donation.get("id")
+
+    form_row = {
+        "donation_id": donation_id,
+        "amount": amount,
+        "donor_name": donor_name,
+        "email": clean_text(payload.get("email"), 180) or None,
+        "phone": clean_text(payload.get("phone"), 80) or None,
+        "street": clean_text(payload.get("street"), 180) or None,
+        "postal_code": clean_text(payload.get("postal_code"), 40) or None,
+        "city": clean_text(payload.get("city"), 120) or None,
+        "country": clean_text(payload.get("country"), 120) or "Nederland",
+        "description_primary": description_primary,
+        "description_secondary": clean_text(payload.get("description_secondary"), 220) or "Guido de Bres Uganda reis 2027",
+        "tax_year": 2027,
+    }
+
+    try:
+        form_response = supabase_admin().table("large_donation_forms").insert(form_row).execute()
+    except Exception as error:
+        if donation_id:
+            supabase_admin().table("donations").delete().eq("id", donation_id).execute()
+        return jsonify({"error": "Kon formulier niet opslaan. Run supabase-schema.sql opnieuw in Supabase. " + str(error)}), 500
+
+    created = form_response.data[0] if form_response.data else form_row
+    return jsonify({
+        "form": created,
+        "donation": donation,
+        "pdf_url": "/api/large-donation-forms/" + created["id"] + "/pdf",
+    }), 201
+
+
+@app.get("/api/large-donation-forms")
+def list_large_donation_forms():
+    blocked = admin_required()
+    if blocked:
+        return blocked
+
+    if not has_admin_config():
+        return jsonify({"error": "SUPABASE_SERVICE_KEY ontbreekt in .env."}), 500
+
+    response = (
+        supabase_admin()
+        .table("large_donation_forms")
+        .select("*")
+        .order("created_at", desc=True)
+        .execute()
+    )
+    return jsonify({"forms": response.data or []})
+
+
+@app.get("/api/large-donation-forms/<form_id>/pdf")
+def large_donation_form_pdf(form_id):
+    if not has_admin_config():
+        return jsonify({"error": "SUPABASE_SERVICE_KEY ontbreekt in .env."}), 500
+
+    response = (
+        supabase_admin()
+        .table("large_donation_forms")
+        .select("*")
+        .eq("id", form_id)
+        .limit(1)
+        .execute()
+    )
+    if not response.data:
+        return jsonify({"error": "Formulier niet gevonden."}), 404
+
+    pdf = build_large_donation_pdf(response.data[0])
+    return Response(
+        pdf,
+        mimetype="application/pdf",
+        headers={"Content-Disposition": "inline; filename=grote-donatie-2027.pdf"},
+    )
+
+
+def build_large_donation_pdf(row):
+    from reportlab.lib import colors
+    from reportlab.lib.pagesizes import A4
+    from reportlab.lib.units import mm
+    from reportlab.pdfgen import canvas
+
+    buffer = io.BytesIO()
+    pdf = canvas.Canvas(buffer, pagesize=A4)
+    width, height = A4
+    left = 20 * mm
+    line = height - 22 * mm
+
+    def draw_line(label, value="", size=10, bold=False):
+        nonlocal line
+        pdf.setFont("Helvetica-Bold" if bold else "Helvetica", size)
+        pdf.drawString(left, line, str(label))
+        if value:
+            pdf.setFont("Helvetica", size)
+            pdf.drawString(left + 58 * mm, line, str(value))
+        line -= 9 * mm
+
+    pdf.setFillColor(colors.HexColor("#080806"))
+    pdf.rect(0, 0, width, height, fill=1, stroke=0)
+    pdf.setFillColor(colors.HexColor("#f8efd8"))
+    pdf.rect(12 * mm, 12 * mm, width - 24 * mm, height - 24 * mm, fill=1, stroke=0)
+    pdf.setFillColor(colors.HexColor("#080806"))
+    pdf.setStrokeColor(colors.HexColor("#080806"))
+    pdf.setLineWidth(1.2)
+    pdf.rect(18 * mm, 18 * mm, width - 36 * mm, height - 36 * mm, fill=0, stroke=1)
+
+    pdf.setFont("Helvetica-Bold", 24)
+    pdf.drawString(left, line, "FACTUUR UGANDA")
+    line -= 9 * mm
+    pdf.setFillColor(colors.HexColor("#ff5a3d"))
+    pdf.setFont("Helvetica-Bold", 11)
+    pdf.drawString(left, line, "Noah's Ark donatieformulier 2027")
+    line -= 14 * mm
+    pdf.setFillColor(colors.HexColor("#080806"))
+
+    draw_line("Formuliernummer", str(row.get("id", ""))[:18])
+    draw_line("Naam", row.get("donor_name", ""))
+    draw_line("E-mail", row.get("email", ""))
+    draw_line("Telefoon", row.get("phone", ""))
+    draw_line("Adres", row.get("street", ""))
+    draw_line("Postcode / plaats", (row.get("postal_code") or "") + " " + (row.get("city") or ""))
+    draw_line("Land", row.get("country", ""))
+    draw_line("Bedrag", "EUR " + str(row.get("amount", "")), bold=True)
+    draw_line("Omschrijving 1", row.get("description_primary", ""), bold=True)
+    draw_line("Omschrijving 2", row.get("description_secondary", ""))
+    draw_line("Jaar", str(row.get("tax_year", 2027)))
+
+    line -= 4 * mm
+    pdf.setStrokeColor(colors.HexColor("#080806"))
+    pdf.line(left, line, width - left, line)
+    line -= 9 * mm
+    pdf.setFont("Helvetica-Bold", 11)
+    pdf.drawString(left, line, "Betaalinstructie")
+    line -= 7 * mm
+    pdf.setFont("Helvetica", 10)
+    pdf.drawString(left, line, "Dit formulier voert geen bankbetaling uit.")
+    line -= 7 * mm
+    pdf.drawString(left, line, "Maak het bedrag zelf over via je bank naar de IBAN van Noah's Ark.")
+    line -= 7 * mm
+    pdf.drawString(left, line, "Gebruik Omschrijving 1 als betalingsomschrijving.")
+    line -= 9 * mm
+    pdf.drawString(left, line, "Deze directe donatie kan fiscaal aftrekbaar zijn. Bewaar dit formulier bij je administratie.")
+
+    pdf.showPage()
+    pdf.save()
+    return buffer.getvalue()
 
 
 @app.delete("/api/donations/<donation_id>")

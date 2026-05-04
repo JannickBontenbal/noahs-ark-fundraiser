@@ -1419,6 +1419,85 @@
       transform: translateY(-1px);
     }
 
+    .large-transfer-action {
+      display: grid;
+      justify-items: center;
+      gap: 10px;
+      margin-top: 4px;
+    }
+
+    .large-transfer-row {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      gap: 10px;
+      width: min(100%, 420px);
+    }
+
+    .large-transfer-button {
+      gap: 10px;
+      flex: 1 1 auto;
+      min-width: 0;
+      background: rgba(8, 8, 6, 0.06);
+      color: var(--ink);
+      border-color: rgba(8, 8, 6, 0.26);
+    }
+
+    .large-transfer-button:hover,
+    .large-transfer-button:focus-visible {
+      color: var(--ink);
+    }
+
+    .info-icon {
+      position: relative;
+      display: inline-grid;
+      place-items: center;
+      width: 18px;
+      height: 18px;
+      flex: 0 0 18px;
+      padding: 0;
+      border: 1px solid currentColor;
+      border-radius: 50%;
+      background: transparent;
+      color: var(--ink);
+      font-family: var(--mono);
+      font-size: 10px;
+      font-weight: 900;
+      line-height: 1;
+      text-transform: none;
+    }
+
+    .info-icon::after {
+      content: attr(data-tooltip);
+      position: absolute;
+      right: -2px;
+      bottom: calc(100% + 10px);
+      z-index: 4;
+      width: min(260px, 72vw);
+      padding: 10px 12px;
+      border: 1px solid rgba(8, 8, 6, 0.22);
+      border-radius: 6px;
+      background: var(--ink);
+      color: var(--surface-strong);
+      font-family: var(--body);
+      font-size: 13px;
+      font-weight: 700;
+      line-height: 1.25;
+      text-align: left;
+      text-transform: none;
+      transform: translateY(6px);
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 160ms var(--ease), transform 160ms var(--ease);
+      white-space: normal;
+    }
+
+    .info-icon:hover::after,
+    .info-icon:focus-visible::after {
+      opacity: 1;
+      transform: translateY(0);
+    }
+
     .modal-actions {
       display: flex;
       flex-wrap: wrap;
@@ -2014,20 +2093,12 @@
           </div>
           <p class="modal-copy">De knop opent de offici&euml;le GoFundMe betaalpagina voor deze actie.</p>
         </div>
-        <div class="donation-method">
-          <span>IBAN</span>
-          <strong id="donate-iban">[IBAN invullen]</strong>
-          <p class="modal-copy" id="donate-iban-name">Stichting [naam invullen]</p>
-          <div class="modal-actions">
-            <button class="button secondary" type="button" data-copy-iban>IBAN kopi&euml;ren</button>
+        <div class="large-transfer-action">
+          <div class="large-transfer-row">
+            <a class="button large-transfer-button" href="grote-donatie.html">Groot bedrag overmaken?</a>
+            <button class="info-icon" type="button" aria-label="Informatie over grote bedragen" data-tooltip="Voor grote bedragen raden wij aan om het direct over te maken op de IBAN van Noah's Ark. Het formulier is vooral voor onze administratie en om de teller goed bij te houden.">i</button>
           </div>
         </div>
-        <div class="donation-method">
-          <span>Tikkie</span>
-          <a id="donate-tikkie" href="#" target="_blank" rel="noreferrer">[Tikkie link invullen]</a>
-        </div>
-        <p class="modal-copy">Gebruik je IBAN of Tikkie, vermeld dan je naam zodat we je kunnen bedanken en de donatiestand kunnen bijwerken.</p>
-        <p class="modal-copy">Donaties kunnen aftrekbaar zijn van belasting. Vraag je belastingadviseur.</p>
         <div class="copy-status" id="copy-status" aria-live="polite"></div>
       </div>
     </div>
@@ -2070,7 +2141,6 @@
         element.textContent = "Doel " + currencyFormat.format(goal);
       });
       document.getElementById("stat-days").textContent = numberFormat.format(rendered.days);
-      fillDonateModal();
       bindDonateModal();
       bindNoahCarousel();
       renderFundraisingActions();
@@ -2245,27 +2315,9 @@
         return Math.max(0, Math.ceil((target.getTime() - today.getTime()) / 86400000));
       }
 
-      function fillDonateModal() {
-        var iban = config.IBAN || "[IBAN invullen]";
-        var ibanName = config.IBAN_NAME || "Stichting [naam invullen]";
-        var tikkieUrl = config.TIKKIE_URL || "[Tikkie link invullen]";
-        var tikkie = document.getElementById("donate-tikkie");
-
-        document.getElementById("donate-iban").textContent = iban;
-        document.getElementById("donate-iban-name").textContent = ibanName;
-        tikkie.textContent = tikkieUrl;
-        if (/^https?:\/\//i.test(tikkieUrl)) {
-          tikkie.href = tikkieUrl;
-        } else {
-          tikkie.removeAttribute("href");
-        }
-      }
-
       function bindDonateModal() {
         var modal = document.getElementById("donate-modal");
         var closeButton = modal.querySelector("[data-close-donate]");
-        var copyButton = modal.querySelector("[data-copy-iban]");
-        var copyStatus = document.getElementById("copy-status");
 
         document.querySelectorAll("[data-open-donate]").forEach(function (button) {
           button.addEventListener("click", openModal);
@@ -2280,15 +2332,6 @@
         document.addEventListener("keydown", function (event) {
           if (event.key === "Escape" && modal.classList.contains("is-open")) {
             closeModal();
-          }
-        });
-        copyButton.addEventListener("click", async function () {
-          var iban = document.getElementById("donate-iban").textContent;
-          try {
-            await navigator.clipboard.writeText(iban);
-            copyStatus.textContent = "IBAN gekopieerd";
-          } catch (error) {
-            copyStatus.textContent = "Kopieer handmatig";
           }
         });
 

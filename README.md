@@ -1,6 +1,6 @@
 # Noah's Ark Fundraiser
 
-Static public fundraiser page with a small Python/Flask admin API for safely adding and deleting donations in Supabase.
+Static public fundraiser page with a small Python/Flask admin API for safely adding and deleting donations in Supabase. Large direct-transfer donations can generate a filled PDF form and are stored in a separate admin list.
 
 ## 1. Install Python
 
@@ -28,7 +28,7 @@ Copy `.env.example` to `.env` and fill the real values. Never commit `.env`.
 
 ## 3. Create the Supabase table
 
-Open Supabase SQL Editor and run the SQL in `supabase-schema.sql`.
+Open Supabase SQL Editor and run the SQL in `supabase-schema.sql`. Re-run it after updates; it creates both `donations` and `large_donation_forms`.
 
 The publishable key is already filled in. For admin add/delete, also fill this line in `.env`:
 
@@ -50,6 +50,7 @@ Open:
 ```text
 http://localhost:5000/
 http://localhost:5000/admin
+http://localhost:5000/grote-donatie.html
 ```
 
 Default admin password: `uganda2026`.
@@ -62,7 +63,8 @@ This project is ready for Render as one free Python web service. The public site
 2. Go to Render and choose **New > Blueprint**.
 3. Connect the repository and select `render.yaml`.
 4. When Render asks for `SUPABASE_SERVICE_KEY`, paste your Supabase service role key.
-5. After deploy, open the generated `https://...onrender.com` URL.
+5. Make sure `supabase-schema.sql` has been run in Supabase.
+6. After deploy, open the generated `https://...onrender.com` URL.
 
 Render settings if you create the service manually instead of using the blueprint:
 
@@ -89,3 +91,5 @@ TIKKIE_URL=your-tikkie-link
 ```
 
 Free Render services can sleep after inactivity. The first request after a quiet period can take about a minute.
+
+The large-donation form only records the submitted form and adds the amount to the counter after the user confirms they will transfer it themselves. It does not execute a bank payment.

@@ -1,0 +1,625 @@
+<!doctype html>
+<html lang="nl">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="Formulier voor grote directe donaties aan Noah's Ark Uganda.">
+  <title>Groot bedrag overmaken - Noah's Ark Fundraiser</title>
+  <link rel="icon" href="favicon.svg" type="image/svg+xml">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght,SOFT,WONK@9..144,600..900,0..100,0..1&family=Inter+Tight:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --background: #080806;
+      --surface-strong: #f8efd8;
+      --text-primary: #fff8e8;
+      --text-muted: rgba(255, 248, 232, 0.66);
+      --ink: #080806;
+      --border: rgba(255, 248, 232, 0.18);
+      --acid: #d9ff3f;
+      --coral: #ff5a3d;
+      --sky: #77e7ff;
+      --display: "Fraunces", Georgia, serif;
+      --body: "Inter Tight", system-ui, sans-serif;
+      --mono: "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, monospace;
+      --ease: cubic-bezier(0.22, 1, 0.36, 1);
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    html {
+      background: var(--background);
+      color-scheme: dark;
+    }
+
+    body {
+      min-width: 320px;
+      margin: 0;
+      background:
+        linear-gradient(90deg, rgba(255, 248, 232, 0.045) 1px, transparent 1px) 0 0 / 74px 74px,
+        linear-gradient(0deg, rgba(255, 248, 232, 0.035) 1px, transparent 1px) 0 0 / 74px 74px,
+        repeating-linear-gradient(135deg, rgba(217, 255, 63, 0.045) 0 1px, transparent 1px 16px),
+        var(--background);
+      color: var(--text-primary);
+      font-family: var(--body);
+      line-height: 1.5;
+    }
+
+    a {
+      color: inherit;
+      text-decoration: none;
+    }
+
+    button,
+    input,
+    textarea {
+      font: inherit;
+    }
+
+    .nav {
+      display: flex;
+      justify-content: space-between;
+      gap: 18px;
+      align-items: center;
+      padding: 16px clamp(18px, 3.3vw, 46px);
+      border-bottom: 1px solid var(--border);
+      background: rgba(8, 8, 6, 0.76);
+      backdrop-filter: blur(18px);
+    }
+
+    .logo {
+      display: grid;
+      gap: 2px;
+      font-family: var(--mono);
+      font-size: 12px;
+      font-weight: 700;
+      line-height: 1.05;
+      text-transform: uppercase;
+    }
+
+    .logo span,
+    .kicker {
+      color: var(--acid);
+    }
+
+    .button {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 48px;
+      padding: 0 18px;
+      border: 1px solid rgba(255, 248, 232, 0.34);
+      border-radius: 4px;
+      background: rgba(255, 248, 232, 0.03);
+      color: var(--text-primary);
+      font-family: var(--mono);
+      font-size: 11px;
+      font-weight: 700;
+      text-transform: uppercase;
+      transition: border-color 180ms var(--ease), color 180ms var(--ease), transform 180ms var(--ease);
+      cursor: pointer;
+    }
+
+    .button:hover,
+    .button:focus-visible {
+      border-color: var(--acid);
+      color: var(--acid);
+      outline: 0;
+      transform: translateY(-1px);
+    }
+
+    .button.dark {
+      border-color: var(--ink);
+      background: var(--ink);
+      color: var(--text-primary);
+    }
+
+    .button.dark:hover,
+    .button.dark:focus-visible {
+      background: var(--coral);
+      color: var(--ink);
+    }
+
+    .panel .button:not(.dark) {
+      border-color: rgba(8, 8, 6, 0.42);
+      background: rgba(8, 8, 6, 0.06);
+      color: var(--ink);
+    }
+
+    .panel .button:not(.dark):hover,
+    .panel .button:not(.dark):focus-visible {
+      border-color: var(--ink);
+      background: var(--acid);
+      color: var(--ink);
+    }
+
+    main {
+      width: min(100%, 1180px);
+      margin: 0 auto;
+      padding: clamp(38px, 7vw, 92px) clamp(18px, 3.3vw, 46px) 90px;
+    }
+
+    .hero {
+      display: grid;
+      grid-template-columns: minmax(0, 0.95fr) minmax(300px, 0.55fr);
+      gap: clamp(28px, 5vw, 70px);
+      align-items: end;
+      margin-bottom: 34px;
+    }
+
+    .kicker,
+    label,
+    .micro-label {
+      margin: 0;
+      font-family: var(--mono);
+      font-size: 11px;
+      font-weight: 700;
+      text-transform: uppercase;
+    }
+
+    h1 {
+      max-width: 850px;
+      margin: 12px 0 0;
+      font-size: clamp(52px, 8vw, 118px);
+      font-weight: 900;
+      line-height: 0.82;
+      text-transform: uppercase;
+    }
+
+    h1 em {
+      color: var(--acid);
+      font-family: var(--display);
+      font-style: italic;
+      font-variation-settings: "SOFT" 80, "WONK" 1;
+      text-transform: none;
+    }
+
+    .tax-note {
+      padding: 20px;
+      border: 1px solid var(--ink);
+      border-radius: 8px;
+      background: var(--acid);
+      color: var(--ink);
+      box-shadow: 10px 10px 0 var(--coral);
+      font-size: 19px;
+      font-weight: 850;
+      line-height: 1.18;
+    }
+
+    .layout {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) minmax(280px, 0.34fr);
+      gap: 24px;
+      align-items: start;
+    }
+
+    .panel {
+      border: 1px solid var(--ink);
+      border-radius: 8px;
+      background: var(--surface-strong);
+      color: var(--ink);
+      box-shadow: 12px 12px 0 var(--sky);
+      overflow: hidden;
+    }
+
+    .panel-head {
+      padding: 22px;
+      border-bottom: 1px solid rgba(8, 8, 6, 0.18);
+    }
+
+    .panel-head h2 {
+      margin: 6px 0 0;
+      font-family: var(--display);
+      font-size: clamp(34px, 5vw, 64px);
+      line-height: 0.95;
+    }
+
+    form {
+      display: grid;
+      gap: 16px;
+      padding: 22px;
+    }
+
+    .field-row {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 12px;
+    }
+
+    .field {
+      display: grid;
+      gap: 7px;
+    }
+
+    label {
+      color: var(--coral);
+    }
+
+    input,
+    textarea {
+      width: 100%;
+      min-height: 46px;
+      padding: 11px 12px;
+      border: 1px solid rgba(8, 8, 6, 0.2);
+      border-radius: 6px;
+      background: rgba(8, 8, 6, 0.045);
+      color: var(--ink);
+      outline: 0;
+    }
+
+    textarea {
+      min-height: 88px;
+      resize: vertical;
+    }
+
+    input:focus,
+    textarea:focus {
+      border-color: var(--coral);
+      box-shadow: 0 0 0 3px rgba(255, 90, 61, 0.16);
+    }
+
+    .check-field {
+      display: grid;
+      grid-template-columns: 18px minmax(0, 1fr);
+      gap: 10px;
+      align-items: start;
+      padding: 14px;
+      border: 1px solid rgba(8, 8, 6, 0.18);
+      border-radius: 6px;
+      background: rgba(8, 8, 6, 0.04);
+      color: rgba(8, 8, 6, 0.78);
+      font-weight: 700;
+    }
+
+    .check-field input {
+      width: 18px;
+      min-height: 18px;
+      height: 18px;
+      margin: 1px 0 0;
+      accent-color: var(--coral);
+    }
+
+    .side-card {
+      display: grid;
+      gap: 16px;
+      padding: 22px;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      background: rgba(255, 248, 232, 0.07);
+    }
+
+    .info-line {
+      display: grid;
+      grid-template-columns: 20px minmax(0, 1fr);
+      gap: 10px;
+      align-items: start;
+      padding: 12px;
+      border: 1px solid rgba(217, 255, 63, 0.36);
+      border-radius: 8px;
+      background: rgba(217, 255, 63, 0.09);
+      color: var(--text-muted);
+      font-weight: 700;
+    }
+
+    .info-icon {
+      display: inline-grid;
+      place-items: center;
+      width: 20px;
+      height: 20px;
+      border: 1px solid var(--acid);
+      border-radius: 50%;
+      color: var(--acid);
+      font-family: var(--mono);
+      font-size: 11px;
+      font-weight: 900;
+      line-height: 1;
+    }
+
+    .side-card strong {
+      display: block;
+      overflow-wrap: anywhere;
+      color: var(--acid);
+      font-size: 24px;
+      font-weight: 900;
+      line-height: 1.05;
+    }
+
+    .muted {
+      color: var(--text-muted);
+      font-weight: 650;
+    }
+
+    .transfer-list {
+      display: grid;
+      gap: 10px;
+    }
+
+    .transfer-row {
+      display: grid;
+      gap: 4px;
+    }
+
+    .copy-button {
+      min-height: 34px;
+      width: fit-content;
+      margin-top: 6px;
+      padding: 0 10px;
+      font-size: 10px;
+    }
+
+    .form-message {
+      min-height: 22px;
+      margin: 0;
+      color: #005b6b;
+      font-family: var(--mono);
+      font-size: 11px;
+      font-weight: 700;
+      text-transform: uppercase;
+    }
+
+    .form-message.error {
+      color: var(--coral);
+    }
+
+    .success-box {
+      display: none;
+      gap: 14px;
+      padding: 22px;
+      border-top: 1px solid rgba(8, 8, 6, 0.18);
+      background: rgba(217, 255, 63, 0.22);
+    }
+
+    .success-box.is-visible {
+      display: grid;
+    }
+
+    @media (max-width: 860px) {
+      .hero,
+      .layout,
+      .field-row {
+        grid-template-columns: 1fr;
+      }
+    }
+  </style>
+</head>
+<body>
+  <nav class="nav" aria-label="Hoofdnavigatie">
+    <a class="logo" href="index.html">
+      Guido de Br&egrave;s
+      <span>x Noah's Ark</span>
+    </a>
+    <a class="button" href="index.html#doneer">Terug naar doneren</a>
+  </nav>
+
+  <main>
+    <section class="hero">
+      <div>
+        <p class="kicker">Grote gift / 2027</p>
+        <h1>Direct <em>overmaken</em></h1>
+      </div>
+      <p class="tax-note">Donaties via dit formulier worden direct overgemaakt aan Noah's Ark en zijn fiscaal aftrekbaar. Je moet het bedrag daarna nog zelf via je bank overmaken.</p>
+    </section>
+
+    <div class="layout">
+      <section class="panel" aria-labelledby="form-heading">
+        <div class="panel-head">
+          <p class="kicker">Formulier</p>
+          <h2 id="form-heading">Groot bedrag overmaken</h2>
+        </div>
+        <form id="large-donation-form">
+          <div class="field-row">
+            <div class="field">
+              <label for="donor_name">Naam</label>
+              <input id="donor_name" name="donor_name" type="text" autocomplete="name" required>
+            </div>
+            <div class="field">
+              <label for="amount">Bedrag (&euro;)</label>
+              <input id="amount" name="amount" type="number" min="1" step="0.01" required>
+            </div>
+          </div>
+          <div class="field-row">
+            <div class="field">
+              <label for="email">E-mail</label>
+              <input id="email" name="email" type="email" autocomplete="email">
+            </div>
+            <div class="field">
+              <label for="phone">Telefoon</label>
+              <input id="phone" name="phone" type="tel" autocomplete="tel">
+            </div>
+          </div>
+          <div class="field">
+            <label for="street">Adres</label>
+            <input id="street" name="street" type="text" autocomplete="street-address">
+          </div>
+          <div class="field-row">
+            <div class="field">
+              <label for="postal_code">Postcode</label>
+              <input id="postal_code" name="postal_code" type="text" autocomplete="postal-code">
+            </div>
+            <div class="field">
+              <label for="city">Plaats</label>
+              <input id="city" name="city" type="text" autocomplete="address-level2">
+            </div>
+          </div>
+          <div class="field">
+            <label for="country">Land</label>
+            <input id="country" name="country" type="text" value="Nederland" autocomplete="country-name">
+          </div>
+          <div class="field">
+            <label for="description_primary">Omschrijving 1</label>
+            <textarea id="description_primary" name="description_primary" required placeholder="Vul hier je eigen omschrijving in"></textarea>
+          </div>
+          <label class="check-field" for="confirmed_transfer">
+            <input id="confirmed_transfer" name="confirmed_transfer" type="checkbox" required>
+            <span>Ik bevestig dat ik dit bedrag zelf via mijn bank overmaak naar de rekening van Noah's Ark. Pas na deze bevestiging telt het bedrag mee.</span>
+          </label>
+          <div class="form-actions">
+            <button class="button dark" type="submit">Afronden en PDF maken</button>
+            <a class="button" href="index.html#doneer">Annuleren</a>
+          </div>
+          <p class="form-message" id="form-message" aria-live="polite"></p>
+        </form>
+        <div class="success-box" id="success-box">
+          <strong>Formulier aangemaakt. Het bedrag telt nu mee in de donatiestand.</strong>
+          <div class="form-actions">
+            <a class="button dark" id="pdf-link" href="#" target="_blank" rel="noreferrer">PDF openen</a>
+            <a class="button" href="index.html">Terug naar site</a>
+          </div>
+        </div>
+      </section>
+
+      <aside class="side-card" aria-label="Overmaken">
+        <p class="kicker">Overmaken naar</p>
+        <div class="info-line">
+          <span class="info-icon" aria-hidden="true">i</span>
+          <span>Dit formulier is vooral voor onze administratie, de PDF en om de donatieteller goed bij te houden. Het voert geen bankbetaling uit.</span>
+        </div>
+        <div class="transfer-list">
+          <div class="transfer-row">
+            <span class="micro-label">Rekeninghouder</span>
+            <strong id="iban-name">Noah's Ark</strong>
+          </div>
+          <div class="transfer-row">
+            <span class="micro-label">IBAN</span>
+            <strong id="iban-value">[IBAN invullen]</strong>
+            <button class="button copy-button" type="button" data-copy-target="iban-value">Kopieer IBAN</button>
+          </div>
+          <div class="transfer-row">
+            <span class="micro-label">Bedrag</span>
+            <strong id="transfer-amount">Nog invullen</strong>
+          </div>
+          <div class="transfer-row">
+            <span class="micro-label">Omschrijving</span>
+            <strong id="transfer-description">Nog invullen</strong>
+            <button class="button copy-button" type="button" data-copy-target="transfer-description">Kopieer omschrijving</button>
+          </div>
+        </div>
+        <p class="muted">Open je eigen bank-app, vul deze gegevens in en rond de overschrijving daar af. Na afronden maken we hier een PDF-formulier met jouw ingevulde gegevens.</p>
+      </aside>
+    </div>
+  </main>
+
+  <script src="config.js"></script>
+  <script>
+    (function () {
+      "use strict";
+
+      var config = window.NAF_CONFIG || {};
+      var apiBase = cleanUrl(config.ADMIN_API_URL || "");
+      var form = document.getElementById("large-donation-form");
+      var message = document.getElementById("form-message");
+      var successBox = document.getElementById("success-box");
+      var pdfLink = document.getElementById("pdf-link");
+      var transferAmount = document.getElementById("transfer-amount");
+      var transferDescription = document.getElementById("transfer-description");
+
+      document.getElementById("iban-name").textContent = config.IBAN_NAME || "Noah's Ark";
+      document.getElementById("iban-value").textContent = config.IBAN || "[IBAN invullen]";
+      form.addEventListener("submit", handleSubmit);
+      form.amount.addEventListener("input", updateTransferSummary);
+      form.description_primary.addEventListener("input", updateTransferSummary);
+      document.querySelectorAll("[data-copy-target]").forEach(function (button) {
+        button.addEventListener("click", function () {
+          copyText(document.getElementById(button.getAttribute("data-copy-target")).textContent);
+        });
+      });
+      updateTransferSummary();
+
+      function cleanUrl(url) {
+        return String(url || "").replace(/\/+$/, "");
+      }
+
+      function apiPath(path) {
+        return (apiBase || "") + path;
+      }
+
+      function updateTransferSummary() {
+        var amount = Number(form.amount.value);
+        transferAmount.textContent = amount > 0 ? new Intl.NumberFormat("nl-NL", {
+          style: "currency",
+          currency: "EUR"
+        }).format(amount) : "Nog invullen";
+        transferDescription.textContent = form.description_primary.value.trim() || "Nog invullen";
+      }
+
+      async function copyText(value) {
+        try {
+          await navigator.clipboard.writeText(value);
+          message.className = "form-message";
+          message.textContent = "Gekopieerd.";
+        } catch (error) {
+          message.className = "form-message error";
+          message.textContent = "Kopieer handmatig.";
+        }
+      }
+
+      async function handleSubmit(event) {
+        event.preventDefault();
+        message.className = "form-message";
+        message.textContent = "Formulier afronden...";
+
+        var amount = Number(form.amount.value);
+        if (!amount || amount < 1) {
+          message.className = "form-message error";
+          message.textContent = "Vul een geldig bedrag in.";
+          return;
+        }
+
+        if (window.location.protocol === "file:" && !apiBase) {
+          message.className = "form-message error";
+          message.textContent = "Start app.py en open deze pagina via http://localhost:5000/grote-donatie.html, of vul ADMIN_API_URL in config.js.";
+          return;
+        }
+
+        try {
+          form.querySelector("button[type='submit']").disabled = true;
+          var response = await fetch(apiPath("/api/large-donation-forms"), {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              amount: amount,
+              donor_name: form.donor_name.value.trim(),
+              email: form.email.value.trim(),
+              phone: form.phone.value.trim(),
+              street: form.street.value.trim(),
+              postal_code: form.postal_code.value.trim(),
+              city: form.city.value.trim(),
+              country: form.country.value.trim(),
+              description_primary: form.description_primary.value.trim(),
+              confirmed_transfer: form.confirmed_transfer.checked
+            })
+          });
+
+          if (!response.ok) {
+            throw await httpError(response, "Formulier kon niet worden opgeslagen.");
+          }
+
+          var body = await response.json();
+          pdfLink.href = apiPath(body.pdf_url);
+          successBox.classList.add("is-visible");
+          form.reset();
+          form.style.display = "none";
+          message.textContent = "";
+        } catch (error) {
+          message.className = "form-message error";
+          message.textContent = error.message || "Formulier kon niet worden opgeslagen. Controleer of app.py draait en supabase-schema.sql opnieuw is uitgevoerd.";
+        } finally {
+          form.querySelector("button[type='submit']").disabled = false;
+        }
+      }
+
+      async function httpError(response, fallback) {
+        try {
+          var body = await response.json();
+          return new Error(body.error || fallback);
+        } catch (error) {
+          return new Error(fallback + " Controleer of app.py draait, SUPABASE_SERVICE_KEY is ingesteld en supabase-schema.sql opnieuw is uitgevoerd.");
+        }
+      }
+    })();
+  </script>
+</body>
+</html>

@@ -629,6 +629,7 @@
         <span>x Noah's Ark admin</span>
       </a>
       <div class="top-actions">
+        <a class="button" href="#large-forms-panel">Formulieren</a>
         <button class="button" type="button" id="refresh-button">Vernieuwen</button>
         <button class="button danger" type="button" id="logout-button">Uitloggen</button>
       </div>
@@ -721,6 +722,36 @@
       </div>
 
       <div class="section-stack">
+        <section class="panel" id="large-forms-panel" aria-labelledby="large-forms-heading">
+          <div class="panel-head">
+            <div>
+              <p class="kicker">Formulieren</p>
+              <h2 id="large-forms-heading">Grote bedragen</h2>
+            </div>
+          </div>
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>Datum</th>
+                  <th>Naam</th>
+                  <th>Bedrag</th>
+                  <th>Omschrijving 1</th>
+                  <th>PDF</th>
+                </tr>
+              </thead>
+              <tbody id="large-forms-body">
+                <tr>
+                  <td class="empty-row" colspan="5">Nog geen formulieren geladen.</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+          <div class="panel-body">
+            <p class="message" id="large-forms-message" aria-live="polite"></p>
+          </div>
+        </section>
+
         <section class="panel light" aria-labelledby="settings-heading">
           <div class="panel-head">
             <div>
@@ -803,7 +834,9 @@
       var formMessage = document.getElementById("form-message");
       var settingsMessage = document.getElementById("settings-message");
       var actionsMessage = document.getElementById("actions-message");
+      var largeFormsMessage = document.getElementById("large-forms-message");
       var donationsBody = document.getElementById("donations-body");
+      var largeFormsBody = document.getElementById("large-forms-body");
       var actionsEditor = document.getElementById("actions-editor");
       var settingsState = {
         GOAL_EUR: goal,
@@ -873,9 +906,10 @@
         if (localPreview) {
           loadSettingsForm();
           loadAdminData();
+          loadLargeForms();
           return;
         }
-        await Promise.all([loadSettingsForm(), loadAdminData()]);
+        await Promise.all([loadSettingsForm(), loadAdminData(), loadLargeForms()]);
       }
 
       async function handleLogout() {
@@ -980,6 +1014,33 @@
         }
       }
 
+      async function loadLargeForms() {
+        if (localPreview) {
+          renderLargeForms([]);
+          largeFormsMessage.className = "message";
+          largeFormsMessage.textContent = "Lokale previewmodus: formulieren verschijnen na submit via Flask/Supabase.";
+          return;
+        }
+
+        try {
+          largeFormsMessage.className = "message";
+          largeFormsMessage.textContent = "Formulieren laden...";
+          var response = await fetch(apiPath("/api/large-donation-forms"), {
+            credentials: "include"
+          });
+          if (!response.ok) {
+            throw await httpError(response, "Kon formulieren niet laden.");
+          }
+          var body = await response.json();
+          renderLargeForms(body.forms || []);
+          largeFormsMessage.textContent = "";
+        } catch (error) {
+          handleAuthError(error);
+          largeFormsMessage.className = "message error";
+          largeFormsMessage.textContent = error.message || "Kon formulieren niet laden.";
+        }
+      }
+
       function renderSummary(rows) {
         var total = rows.reduce(function (sum, donation) {
           return sum + (Number(donation.amount) || 0);
@@ -1024,6 +1085,40 @@
           deleteCell.appendChild(button);
           row.appendChild(deleteCell);
           donationsBody.appendChild(row);
+        });
+      }
+
+      function renderLargeForms(rows) {
+        largeFormsBody.innerHTML = "";
+
+        if (!rows.length) {
+          var emptyRow = document.createElement("tr");
+          var emptyCell = document.createElement("td");
+          emptyCell.className = "empty-row";
+          emptyCell.colSpan = 5;
+          emptyCell.textContent = "Nog geen grote-bedrag formulieren.";
+          emptyRow.appendChild(emptyCell);
+          largeFormsBody.appendChild(emptyRow);
+          return;
+        }
+
+        rows.forEach(function (formRow) {
+          var row = document.createElement("tr");
+          row.appendChild(cell(formatDate(formRow.created_at)));
+          row.appendChild(cell(formRow.donor_name || ""));
+          row.appendChild(cell(currencyFormat.format(Number(formRow.amount) || 0)));
+          row.appendChild(cell(formRow.description_primary || ""));
+
+          var pdfCell = document.createElement("td");
+          var link = document.createElement("a");
+          link.className = "button";
+          link.href = apiPath("/api/large-donation-forms/" + encodeURIComponent(formRow.id) + "/pdf");
+          link.target = "_blank";
+          link.rel = "noreferrer";
+          link.textContent = "Open PDF";
+          pdfCell.appendChild(link);
+          row.appendChild(pdfCell);
+          largeFormsBody.appendChild(row);
         });
       }
 
@@ -1108,7 +1203,7 @@
             throw await httpError(response, "Verwijderen is mislukt.");
           }
           formMessage.textContent = "Donatie verwijderd.";
-          await loadAdminData();
+          await Promise.all([loadAdminData(), loadLargeForms()]);
         } catch (error) {
           handleAuthError(error);
           formMessage.className = "message error";
