@@ -769,12 +769,6 @@
                   <input id="goal" name="goal" type="number" min="1" step="1" required>
                 </div>
                 <div class="field">
-                  <label for="tikkie_url">Tikkie URL</label>
-                  <input id="tikkie_url" name="tikkie_url" type="url" required>
-                </div>
-              </div>
-              <div class="field-row">
-                <div class="field">
                   <label for="iban">IBAN</label>
                   <input id="iban" name="iban" type="text" required>
                 </div>
@@ -844,7 +838,6 @@
         GOAL_EUR: goal,
         IBAN: config.IBAN || "",
         IBAN_NAME: config.IBAN_NAME || "",
-        TIKKIE_URL: config.TIKKIE_URL || "",
         ACTIONS: normalizeActions(config.ACTIONS)
       };
 
@@ -941,7 +934,6 @@
             GOAL_EUR: Number(config.GOAL_EUR || 10000),
             IBAN: config.IBAN || "",
             IBAN_NAME: config.IBAN_NAME || "",
-            TIKKIE_URL: config.TIKKIE_URL || "",
             ACTIONS: normalizeActions(config.ACTIONS)
           };
           goal = settingsState.GOAL_EUR;
@@ -949,7 +941,6 @@
           document.getElementById("goal").value = settingsState.GOAL_EUR;
           document.getElementById("iban").value = settingsState.IBAN;
           document.getElementById("iban_name").value = settingsState.IBAN_NAME;
-          document.getElementById("tikkie_url").value = settingsState.TIKKIE_URL;
           renderActionsEditor(settingsState.ACTIONS);
           settingsMessage.className = "message";
           settingsMessage.textContent = "Lokale previewmodus: wijzigingen gelden in deze browser.";
@@ -969,7 +960,6 @@
             GOAL_EUR: Number(body.GOAL_EUR || 10000),
             IBAN: body.IBAN || "",
             IBAN_NAME: body.IBAN_NAME || "",
-            TIKKIE_URL: body.TIKKIE_URL || "",
             ACTIONS: normalizeActions(body.ACTIONS)
           };
           goal = settingsState.GOAL_EUR;
@@ -977,7 +967,6 @@
           document.getElementById("goal").value = settingsState.GOAL_EUR;
           document.getElementById("iban").value = settingsState.IBAN;
           document.getElementById("iban_name").value = settingsState.IBAN_NAME;
-          document.getElementById("tikkie_url").value = settingsState.TIKKIE_URL;
           renderActionsEditor(settingsState.ACTIONS);
         } catch (error) {
           handleAuthError(error);
@@ -1401,7 +1390,6 @@
             GOAL_EUR: Number(nextSettings.GOAL_EUR || 10000),
             IBAN: nextSettings.IBAN || "",
             IBAN_NAME: nextSettings.IBAN_NAME || "",
-            TIKKIE_URL: nextSettings.TIKKIE_URL || "",
             ACTIONS: normalizeActions(nextSettings.ACTIONS)
           })
         });
@@ -1425,7 +1413,6 @@
             GOAL_EUR: Number(nextSettings.GOAL_EUR || 10000),
             IBAN: nextSettings.IBAN || "",
             IBAN_NAME: nextSettings.IBAN_NAME || "",
-            TIKKIE_URL: nextSettings.TIKKIE_URL || "",
             ACTIONS: normalizeActions(nextSettings.ACTIONS)
           }));
         } catch (error) {
@@ -1437,7 +1424,6 @@
         settingsState.GOAL_EUR = Number(document.getElementById("goal").value || 10000);
         settingsState.IBAN = document.getElementById("iban").value.trim();
         settingsState.IBAN_NAME = document.getElementById("iban_name").value.trim();
-        settingsState.TIKKIE_URL = document.getElementById("tikkie_url").value.trim();
         settingsState.ACTIONS = normalizeActions(collectActions());
       }
 
