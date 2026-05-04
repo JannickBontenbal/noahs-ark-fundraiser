@@ -82,10 +82,33 @@ SUPABASE_SERVICE_KEY=your-service-role-key
 ADMIN_PASSWORD_HASH=0ba0d2c0160a5246cd62e302ccb7711cdac6808a965acf6f01a3a93ac6ab9a67
 FLASK_SECRET_KEY=a-long-random-string
 GOAL_EUR=10000
-TARGET_DATE=2026-02-01
+TARGET_DATE=2027-02-01
 IBAN=your-iban
 IBAN_NAME=your-account-name
 TIKKIE_URL=your-tikkie-link
+STRIPE_PUBLISHABLE_KEY=pk_test_your-publishable-key
+STRIPE_SECRET_KEY=sk_test_your-secret-key
+STRIPE_WEBHOOK_SECRET=whsec_your-webhook-secret
+SITE_URL=https://your-render-url.onrender.com
 ```
 
 Free Render services can sleep after inactivity. The first request after a quiet period can take about a minute.
+
+## Stripe payments
+
+Stripe Checkout is used for iDEAL/card donations. The browser sends the chosen amount to Flask, Flask creates a Checkout Session, and successful payments are verified server-side before a donation row is inserted in Supabase.
+
+Do not commit Stripe secret keys. Put them in `.env` locally and Render environment variables in production. After adding `stripe_session_id` and `stripe_payment_intent`, re-run `supabase-schema.sql` in Supabase SQL Editor so paid Stripe sessions are recorded only once.
+
+For webhook automation, add a Stripe webhook endpoint:
+
+```text
+https://your-domain.example/api/stripe/webhook
+```
+
+Listen for:
+
+```text
+checkout.session.completed
+checkout.session.async_payment_succeeded
+```

@@ -8,22 +8,33 @@
   <link rel="icon" href="favicon.svg" type="image/svg+xml">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Playfair+Display:ital,wght@0,600;0,700;1,600;1,700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght,SOFT,WONK@9..144,600..900,0..100,0..1&family=Inter+Tight:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
   <style>
     :root {
-      --background: #0C0C0B;
-      --surface: #141413;
-      --text-primary: #F0EDE6;
-      --text-muted: rgba(240, 237, 230, 0.38);
-      --text-faint: rgba(240, 237, 230, 0.2);
-      --border: rgba(240, 237, 230, 0.1);
-      --accent: #F0B429;
-      --accent-dim: rgba(240, 180, 41, 0.12);
-      --accent-border: rgba(240, 180, 41, 0.25);
-      --accent-text: #0C0C0B;
-      --display: "Playfair Display", Georgia, serif;
-      --body: "Inter", system-ui, sans-serif;
+      --background: #080806;
+      --background-soft: #10110d;
+      --surface: rgba(255, 248, 230, 0.08);
+      --surface-strong: #f8efd8;
+      --text-primary: #fff8e8;
+      --text-muted: rgba(255, 248, 232, 0.66);
+      --text-faint: rgba(255, 248, 232, 0.36);
+      --ink: #080806;
+      --border: rgba(255, 248, 232, 0.18);
+      --border-strong: rgba(255, 248, 232, 0.34);
+      --acid: #d9ff3f;
+      --solar: #ffb000;
+      --coral: #ff5a3d;
+      --sky: #77e7ff;
+      --accent: var(--acid);
+      --accent-dim: rgba(217, 255, 63, 0.14);
+      --accent-border: rgba(217, 255, 63, 0.44);
+      --accent-text: #080806;
+      --display: "Fraunces", Georgia, serif;
+      --body: "Inter Tight", system-ui, sans-serif;
+      --mono: "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, monospace;
       --nav-height: 76px;
+      --max-width: 1220px;
+      --ease: cubic-bezier(0.22, 1, 0.36, 1);
     }
 
     * {
@@ -37,14 +48,38 @@
     }
 
     body {
+      position: relative;
       margin: 0;
-      background: var(--background);
+      min-width: 320px;
+      overflow-x: hidden;
+      isolation: isolate;
+      background:
+        linear-gradient(90deg, rgba(255, 248, 232, 0.045) 1px, transparent 1px) 0 0 / 74px 74px,
+        linear-gradient(0deg, rgba(255, 248, 232, 0.035) 1px, transparent 1px) 0 0 / 74px 74px,
+        repeating-linear-gradient(135deg, rgba(217, 255, 63, 0.045) 0 1px, transparent 1px 16px),
+        var(--background);
       color: var(--text-primary);
       font-family: var(--body);
-      font-size: 14px;
-      line-height: 1.75;
+      font-size: 16px;
+      line-height: 1.55;
       letter-spacing: 0;
       text-rendering: geometricPrecision;
+    }
+
+    body::before {
+      content: "";
+      position: fixed;
+      inset: 0;
+      z-index: 0;
+      pointer-events: none;
+      opacity: 0.23;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180' viewBox='0 0 180 180'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.72' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='180' height='180' filter='url(%23n)' opacity='.42'/%3E%3C/svg%3E");
+      mix-blend-mode: soft-light;
+    }
+
+    body > * {
+      position: relative;
+      z-index: 1;
     }
 
     body.modal-open {
@@ -75,139 +110,271 @@
       color: var(--accent-text);
     }
 
+    .loading-message {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      z-index: 9999;
+      display: none;
+      padding: 12px 18px;
+      background: var(--accent);
+      color: var(--accent-text);
+      font-weight: 800;
+      text-align: center;
+    }
+
     .nav {
       position: sticky;
       top: 0;
       z-index: 50;
       min-height: var(--nav-height);
-      display: flex;
+      display: grid;
+      grid-template-columns: minmax(180px, 1fr) auto auto;
       align-items: center;
-      justify-content: space-between;
-      gap: 28px;
-      padding: 18px 40px;
-      background: rgba(12, 12, 11, 0.94);
-      border-bottom: 0.5px solid var(--border);
-      backdrop-filter: blur(12px);
+      gap: 24px;
+      padding: 16px clamp(18px, 3.3vw, 46px);
+      background: rgba(8, 8, 6, 0.72);
+      border-bottom: 1px solid var(--border);
+      backdrop-filter: blur(18px);
     }
 
     .logo {
-      max-width: 290px;
+      display: grid;
+      width: fit-content;
+      gap: 2px;
       color: var(--text-primary);
-      font-size: 13px;
+      font-family: var(--mono);
+      font-size: 12px;
       font-weight: 700;
-      line-height: 1.2;
+      line-height: 1.05;
       text-transform: uppercase;
+    }
+
+    .logo span {
+      color: var(--accent);
     }
 
     .nav-links {
       display: flex;
-      gap: 34px;
       align-items: center;
+      gap: clamp(14px, 2vw, 32px);
     }
 
     .nav-link {
-      display: grid;
-      gap: 1px;
-      min-width: 104px;
+      position: relative;
+      display: inline-flex;
+      align-items: center;
+      min-height: 32px;
       color: var(--text-muted);
-      line-height: 1.2;
-      transition: color 180ms ease;
-    }
-
-    .nav-link strong {
-      color: var(--text-primary);
-      font-size: 12px;
-      font-weight: 600;
-    }
-
-    .nav-link span {
-      font-size: 10px;
+      font-family: var(--mono);
+      font-size: 11px;
+      font-weight: 700;
       text-transform: uppercase;
-      letter-spacing: 0;
+      transition: color 180ms var(--ease);
+    }
+
+    .nav-link::after {
+      content: "";
+      position: absolute;
+      left: 0;
+      right: 0;
+      bottom: 3px;
+      height: 2px;
+      background: var(--accent);
+      transform: scaleX(0);
+      transform-origin: left center;
+      transition: transform 220ms var(--ease);
     }
 
     .nav-link:hover,
     .nav-link:focus-visible {
-      color: var(--accent);
+      color: var(--text-primary);
       outline: 0;
     }
 
-    .hero {
-      min-height: min(760px, calc(100svh - 96px));
-      display: grid;
-      grid-template-columns: minmax(0, 1fr) minmax(320px, 0.78fr);
-      align-items: center;
-      gap: 48px;
-      padding: 72px 40px 52px;
-      border-bottom: 0.5px solid var(--border);
+    .nav-link:hover::after,
+    .nav-link:focus-visible::after {
+      transform: scaleX(1);
     }
 
-    .hero-copy,
-    .progress-panel,
-    .section-inner,
-    .footer-inner {
-      width: min(100%, 1180px);
-      margin: 0 auto;
-    }
-
-    .hero-copy {
-      max-width: 650px;
-      margin-left: auto;
-      margin-right: 0;
-    }
-
-    .eyebrow {
+    .button {
+      position: relative;
+      isolation: isolate;
       display: inline-flex;
       align-items: center;
-      min-height: 24px;
-      margin: 0 0 22px;
-      padding: 3px 8px;
-      border: 0.5px solid var(--accent-border);
-      border-radius: 0;
-      color: var(--accent);
-      background: var(--accent-dim);
-      font-size: 10px;
+      justify-content: center;
+      min-height: 48px;
+      padding: 0 20px;
+      border: 1px solid var(--border-strong);
+      border-radius: 4px;
+      overflow: hidden;
+      background: rgba(255, 248, 232, 0.03);
+      color: var(--text-primary);
+      font-family: var(--mono);
+      font-size: 11px;
       font-weight: 700;
       letter-spacing: 0;
       line-height: 1;
       text-transform: uppercase;
+      white-space: nowrap;
+      transition: border-color 180ms var(--ease), color 180ms var(--ease), transform 180ms var(--ease);
     }
 
-    .pre-heading {
-      margin: 0 0 10px;
-      color: var(--text-muted);
-      font-size: 12px;
-      font-weight: 700;
-      letter-spacing: 0;
+    .button::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      z-index: -1;
+      background: var(--accent);
+      transform: translateY(102%);
+      transition: transform 220ms var(--ease);
+    }
+
+    .button:hover,
+    .button:focus-visible {
+      border-color: var(--accent);
+      color: var(--accent-text);
+      outline: 0;
+      transform: translateY(-1px);
+    }
+
+    .button:hover::before,
+    .button:focus-visible::before {
+      transform: translateY(0);
+    }
+
+    .button.primary {
+      border-color: var(--accent);
+      background: var(--accent);
+      color: var(--accent-text);
+    }
+
+    .button.primary::before {
+      background: var(--text-primary);
+    }
+
+    .button.dark {
+      min-height: 54px;
+      border-color: var(--ink);
+      background: var(--ink);
+      color: var(--text-primary);
+    }
+
+    .button.dark::before {
+      background: var(--surface-strong);
+    }
+
+    .button.dark:hover,
+    .button.dark:focus-visible {
+      color: var(--ink);
+    }
+
+    .hero {
+      position: relative;
+      min-height: calc(100svh - var(--nav-height));
+      display: grid;
+      grid-template-columns: minmax(0, 1.12fr) minmax(360px, 0.88fr);
+      align-items: stretch;
+      gap: clamp(26px, 4vw, 64px);
+      width: min(100%, 1500px);
+      margin: 0 auto;
+      padding: clamp(34px, 5vw, 78px) clamp(18px, 3.3vw, 46px) 34px;
+      overflow: hidden;
+    }
+
+    .hero-bg-word {
+      position: absolute;
+      left: -0.06em;
+      bottom: -0.24em;
+      z-index: -1;
+      color: rgba(255, 248, 232, 0.035);
+      font-family: var(--body);
+      font-size: clamp(118px, 22vw, 360px);
+      font-weight: 900;
+      line-height: 0.8;
       text-transform: uppercase;
+      white-space: nowrap;
+      pointer-events: none;
+    }
+
+    .hero-copy {
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      min-width: 0;
+      padding-bottom: clamp(18px, 4vw, 52px);
+    }
+
+    .eyebrow,
+    .section-kicker,
+    .micro-label {
+      margin: 0;
+      color: var(--accent);
+      font-family: var(--mono);
+      font-size: 11px;
+      font-weight: 700;
+      line-height: 1.2;
+      text-transform: uppercase;
+    }
+
+    .eyebrow {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-bottom: 18px;
+    }
+
+    .eyebrow span {
+      display: inline-flex;
+      align-items: center;
+      min-height: 28px;
+      padding: 0 9px;
+      border: 1px solid var(--accent-border);
+      background: var(--accent-dim);
     }
 
     h1,
     h2,
     h3 {
       margin: 0;
-      font-family: var(--display);
-      font-weight: 700;
       letter-spacing: 0;
-      line-height: 1.05;
     }
 
     h1 {
-      max-width: 720px;
-      font-size: clamp(38px, 5.5vw, 56px);
+      max-width: 880px;
+      color: var(--text-primary);
+      font-family: var(--body);
+      font-size: clamp(58px, 10vw, 166px);
+      font-weight: 900;
+      line-height: 0.78;
+      text-transform: uppercase;
+    }
+
+    h1 em {
+      display: inline-block;
+      color: var(--accent);
+      font-family: var(--display);
+      font-style: italic;
+      font-variation-settings: "SOFT" 80, "WONK" 1;
+      text-transform: none;
     }
 
     h2 {
-      font-size: clamp(32px, 4vw, 44px);
+      max-width: 860px;
+      font-family: var(--display);
+      font-size: clamp(42px, 7vw, 104px);
+      font-weight: 850;
+      font-variation-settings: "SOFT" 54, "WONK" 1;
+      line-height: 0.92;
     }
 
     h3 {
-      font-size: 22px;
-    }
-
-    em {
-      color: var(--accent);
-      font-style: italic;
+      font-family: var(--body);
+      font-size: clamp(24px, 3vw, 38px);
+      font-weight: 900;
+      line-height: 0.98;
+      text-transform: uppercase;
     }
 
     .split-heading span {
@@ -216,14 +383,17 @@
 
     .hero-body,
     .section-copy,
-    .modal-copy {
-      max-width: 580px;
+    .modal-copy,
+    .tile-copy {
       color: var(--text-muted);
     }
 
     .hero-body {
-      margin: 24px 0 0;
-      font-size: 15px;
+      max-width: 610px;
+      margin: 28px 0 0;
+      font-size: clamp(18px, 1.8vw, 24px);
+      font-weight: 600;
+      line-height: 1.32;
     }
 
     .button-row {
@@ -233,73 +403,59 @@
       margin-top: 34px;
     }
 
-    .button {
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-      min-height: 46px;
-      padding: 0 18px;
-      border: 0.5px solid var(--border);
-      border-radius: 0;
-      background: transparent;
-      color: var(--text-primary);
-      font-size: 12px;
-      font-weight: 700;
-      letter-spacing: 0;
-      line-height: 1;
-      text-transform: uppercase;
-      transition: background 180ms ease, border-color 180ms ease, color 180ms ease;
-    }
-
-    .button.primary {
-      border-color: var(--accent);
-      background: var(--accent);
-      color: var(--accent-text);
-    }
-
-    .button.secondary:hover,
-    .button.secondary:focus-visible {
-      border-color: var(--accent-border);
-      color: var(--accent);
-      outline: 0;
-    }
-
-    .button.primary:hover,
-    .button.primary:focus-visible {
-      background: var(--text-primary);
-      border-color: var(--text-primary);
-      outline: 0;
+    .hero-visual {
+      position: relative;
+      display: grid;
+      align-content: center;
+      min-width: 0;
+      padding: 18px 0;
     }
 
     .progress-panel {
-      margin-left: 0;
-      padding: 32px;
-      border: 0.5px solid var(--border);
-      background: var(--surface);
+      position: relative;
+      display: grid;
+      grid-template-columns: 1fr;
+      grid-template-areas:
+        "content"
+        "visual"
+        "total"
+        "footer";
+      gap: clamp(16px, 2.4vw, 26px);
+      align-items: center;
+      justify-items: center;
+      min-height: 520px;
+      padding: clamp(28px, 4vw, 56px);
+      border: 1px solid var(--ink);
+      border-radius: 8px;
+      background: var(--surface-strong);
+      color: var(--ink);
+      box-shadow: 18px 18px 0 var(--sky);
+      transform: rotate(1.3deg);
     }
 
     .progress-label {
       display: flex;
-      align-items: center;
       justify-content: space-between;
       gap: 16px;
-      margin-bottom: 26px;
-      color: var(--text-muted);
+      width: 100%;
+      color: rgba(8, 8, 6, 0.64);
+      font-family: var(--mono);
       font-size: 10px;
       font-weight: 700;
-      letter-spacing: 0;
       text-transform: uppercase;
     }
 
     .progress-label span:last-child {
-      color: var(--accent);
+      color: var(--coral);
     }
 
     .progress-visual {
       position: relative;
-      width: 210px;
+      grid-area: visual;
+      width: clamp(230px, 24vw, 340px);
       aspect-ratio: 1;
-      margin: 0 auto;
+      flex: 0 0 auto;
+      justify-self: center;
     }
 
     .progress-visual svg {
@@ -311,16 +467,16 @@
     .progress-track,
     .progress-value {
       fill: none;
-      stroke-width: 13;
+      stroke-width: 15;
       stroke-linecap: butt;
     }
 
     .progress-track {
-      stroke: var(--accent-dim);
+      stroke: rgba(8, 8, 6, 0.12);
     }
 
     .progress-value {
-      stroke: var(--accent);
+      stroke: var(--coral);
     }
 
     .progress-center {
@@ -332,249 +488,759 @@
     }
 
     .progress-percent {
-      color: var(--accent);
+      color: var(--coral);
       font-family: var(--display);
-      font-size: 42px;
+      font-size: clamp(60px, 6.4vw, 100px);
       font-style: italic;
-      font-weight: 700;
-      line-height: 1;
+      font-weight: 900;
+      line-height: 0.9;
     }
 
     .progress-amount {
-      margin-top: 10px;
-      font-size: 15px;
-      font-weight: 700;
-      line-height: 1;
+      margin-top: 0;
+      max-width: 100%;
+      color: var(--ink);
+      font-family: var(--body);
+      font-size: clamp(48px, 6.2vw, 92px);
+      font-weight: 900;
+      letter-spacing: 0;
+      line-height: 0.88;
+      overflow-wrap: anywhere;
+      text-align: center;
     }
 
     .progress-goal {
-      margin-top: 8px;
-      color: var(--text-muted);
+      margin-top: 12px;
+      color: rgba(8, 8, 6, 0.58);
+      font-family: var(--mono);
       font-size: 11px;
+      font-weight: 700;
       line-height: 1;
+      text-transform: uppercase;
+    }
+
+    .progress-content {
+      grid-area: content;
+      width: 100%;
+      min-width: 0;
+    }
+
+    .progress-total {
+      grid-area: total;
+      min-width: 0;
+      width: 100%;
+      text-align: center;
+    }
+
+    .progress-footer {
+      grid-area: footer;
+      min-width: 0;
+      width: 100%;
     }
 
     .stats {
       display: grid;
-      grid-template-columns: repeat(3, 1fr);
-      margin-top: 30px;
-      border-top: 0.5px solid var(--border);
-      border-bottom: 0.5px solid var(--border);
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 10px;
+      margin-top: 4px;
     }
 
     .stat {
       min-width: 0;
-      padding: 18px 14px;
+      padding: 16px 18px;
+      border: 1px solid rgba(8, 8, 6, 0.18);
+      border-radius: 6px;
+      background: rgba(8, 8, 6, 0.045);
       text-align: center;
-    }
-
-    .stat + .stat {
-      border-left: 0.5px solid var(--border);
     }
 
     .stat strong {
       display: block;
       overflow-wrap: anywhere;
-      color: var(--text-primary);
-      font-size: 20px;
-      line-height: 1.1;
+      color: var(--ink);
+      font-size: clamp(22px, 2.4vw, 34px);
+      font-weight: 900;
+      line-height: 1;
     }
 
     .stat span {
       display: block;
-      margin-top: 7px;
-      color: var(--text-muted);
+      margin-top: 6px;
+      color: rgba(8, 8, 6, 0.54);
+      font-family: var(--mono);
+      font-size: 9px;
+      font-weight: 700;
+      line-height: 1.18;
+      text-transform: uppercase;
+      white-space: normal;
+    }
+
+    .live-status {
+      min-height: 18px;
+      margin: 14px 0 0;
+      color: rgba(8, 8, 6, 0.55);
+      font-family: var(--mono);
       font-size: 10px;
       font-weight: 700;
-      letter-spacing: 0;
       line-height: 1.25;
       text-transform: uppercase;
     }
 
-    .live-status {
-      min-height: 20px;
-      margin: 18px 0 0;
-      color: var(--text-faint);
-      font-size: 11px;
-      text-align: center;
+    .noah-section {
+      background:
+        linear-gradient(90deg, rgba(255, 90, 61, 0.16), transparent 36%),
+        var(--surface-strong);
+      color: var(--ink);
+    }
+
+    .noah-section .section-kicker {
+      color: var(--coral);
+    }
+
+    .noah-section .section-copy {
+      color: rgba(8, 8, 6, 0.68);
+    }
+
+    .noah-section .pill {
+      border-color: rgba(8, 8, 6, 0.22);
+      background: rgba(8, 8, 6, 0.04);
+      color: rgba(8, 8, 6, 0.68);
+    }
+
+    .noah-layout {
+      display: grid;
+      grid-template-columns: minmax(0, 0.88fr) minmax(0, 1.12fr);
+      gap: clamp(30px, 5vw, 82px);
+      align-items: center;
+    }
+
+    .noah-copy {
+      position: sticky;
+      top: calc(var(--nav-height) + 34px);
+      align-self: start;
+    }
+
+    .noah-board {
+      position: relative;
+      display: grid;
+      gap: 14px;
+      padding: 16px;
+      border: 1px solid rgba(8, 8, 6, 0.22);
+      border-radius: 8px;
+      background: #fffaf0;
+      box-shadow: 14px 14px 0 var(--accent);
+    }
+
+    .noah-photo-strip {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) minmax(104px, 0.28fr);
+      gap: 12px;
+      min-height: 360px;
+    }
+
+    .noah-carousel {
+      position: relative;
+      overflow: hidden;
+      border: 1px solid rgba(8, 8, 6, 0.18);
+      border-radius: 6px;
+      background: var(--background-soft);
+    }
+
+    .noah-slide {
+      position: absolute;
+      inset: 0;
+      margin: 0;
+      opacity: 0;
+      transform: scale(1.035);
+      transition: opacity 520ms var(--ease), transform 760ms var(--ease);
+    }
+
+    .noah-slide.is-active {
+      opacity: 1;
+      transform: scale(1);
+      z-index: 1;
+    }
+
+    .noah-slide img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      filter: saturate(1.05) contrast(1.04);
+    }
+
+    .noah-slide figcaption {
+      position: absolute;
+      left: 14px;
+      bottom: 14px;
+      z-index: 2;
+      max-width: calc(100% - 28px);
+      padding: 7px 9px;
+      border-radius: 4px;
+      background: rgba(8, 8, 6, 0.82);
+      color: var(--surface-strong);
+      font-family: var(--mono);
+      font-size: 10px;
+      font-weight: 700;
+      text-transform: uppercase;
+    }
+
+    .carousel-controls {
+      position: absolute;
+      left: 14px;
+      right: 14px;
+      top: 14px;
+      z-index: 3;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 12px;
+      pointer-events: none;
+    }
+
+    .carousel-button,
+    .carousel-dot {
+      pointer-events: auto;
+      border: 1px solid rgba(255, 250, 240, 0.74);
+      background: rgba(8, 8, 6, 0.72);
+      color: var(--surface-strong);
+      transition: background 180ms var(--ease), transform 180ms var(--ease);
+    }
+
+    .carousel-button {
+      width: 38px;
+      height: 38px;
+      border-radius: 50%;
+      font-size: 26px;
+      line-height: 1;
+    }
+
+    .carousel-button:hover,
+    .carousel-button:focus-visible {
+      background: var(--accent);
+      color: var(--ink);
+      outline: 0;
+      transform: translateY(-1px);
+    }
+
+    .carousel-dots {
+      display: flex;
+      gap: 6px;
+      padding: 6px;
+      border-radius: 999px;
+      background: rgba(8, 8, 6, 0.52);
+      pointer-events: auto;
+    }
+
+    .carousel-dot {
+      width: 10px;
+      height: 10px;
+      padding: 0;
+      border-radius: 50%;
+      opacity: 0.5;
+    }
+
+    .carousel-dot.is-active {
+      background: var(--accent);
+      border-color: var(--accent);
+      opacity: 1;
+    }
+
+    .noah-word {
+      display: grid;
+      place-items: center;
+      border-radius: 6px;
+      background: var(--ink);
+      color: var(--surface-strong);
+      font-family: var(--body);
+      font-size: clamp(28px, 4.8vw, 72px);
+      font-weight: 900;
+      line-height: 0.8;
+      text-transform: uppercase;
+      writing-mode: vertical-rl;
+      transform: rotate(180deg);
+    }
+
+    .noah-facts {
+      display: grid;
+      gap: 1px;
+      overflow: hidden;
+      border: 1px solid rgba(8, 8, 6, 0.18);
+      border-radius: 6px;
+      background: rgba(8, 8, 6, 0.16);
+    }
+
+    .noah-fact {
+      display: grid;
+      grid-template-columns: minmax(108px, 0.34fr) minmax(0, 1fr);
+      gap: 18px;
+      align-items: center;
+      padding: 16px 18px;
+      background: #fffaf0;
+    }
+
+    .noah-fact span {
+      color: rgba(8, 8, 6, 0.55);
+      font-family: var(--mono);
+      font-size: 10px;
+      font-weight: 700;
+      text-transform: uppercase;
+    }
+
+    .noah-fact strong,
+    .noah-fact a {
+      color: var(--ink);
+      font-size: 18px;
+      font-weight: 900;
+      line-height: 1.12;
+    }
+
+    .noah-fact a {
+      color: #005b6b;
+      text-decoration: underline;
+      text-decoration-thickness: 2px;
+      text-underline-offset: 4px;
+    }
+
+    .marquee {
+      overflow: hidden;
+      border-top: 1px solid var(--border);
+      border-bottom: 1px solid var(--border);
+      background: var(--accent);
+      color: var(--accent-text);
+    }
+
+    .marquee-track {
+      display: flex;
+      width: max-content;
+      animation: marquee 22s linear infinite;
+    }
+
+    .marquee span {
+      display: inline-flex;
+      align-items: center;
+      min-height: 58px;
+      padding: 0 22px;
+      font-family: var(--body);
+      font-size: clamp(28px, 4vw, 58px);
+      font-weight: 900;
+      line-height: 1;
+      text-transform: uppercase;
+      white-space: nowrap;
+    }
+
+    .marquee i {
+      color: var(--coral);
+      font-family: var(--display);
+      font-style: italic;
+      font-variation-settings: "SOFT" 70, "WONK" 1;
+      text-transform: none;
+    }
+
+    @keyframes marquee {
+      from {
+        transform: translateX(0);
+      }
+
+      to {
+        transform: translateX(-50%);
+      }
     }
 
     .section {
-      padding: 52px 40px;
-      border-bottom: 0.5px solid var(--border);
+      position: relative;
+      padding: clamp(70px, 10vw, 138px) clamp(18px, 3.3vw, 46px);
+      border-bottom: 1px solid var(--border);
     }
 
-    .section-inner {
-      display: grid;
-      gap: 48px;
-    }
-
-    .section.two-column .section-inner {
-      grid-template-columns: minmax(0, 1fr) minmax(300px, 0.76fr);
-      align-items: start;
-    }
-
-    .section.single .section-inner {
-      max-width: 680px;
-      margin-left: calc((100% - min(100%, 1180px)) / 2);
-      margin-right: auto;
+    .section-inner,
+    .footer-inner {
+      width: min(100%, var(--max-width));
+      margin: 0 auto;
     }
 
     .section-kicker {
-      --line-scale: 1;
-      display: flex;
+      display: grid;
+      grid-template-columns: auto minmax(32px, 1fr);
+      gap: 16px;
       align-items: center;
-      gap: 14px;
-      margin: 0 0 24px;
-      color: var(--accent);
-      font-size: 10px;
-      font-weight: 700;
-      letter-spacing: 0;
-      text-transform: uppercase;
+      margin-bottom: 22px;
     }
 
     .section-kicker::after {
       content: "";
       display: block;
-      flex: 1;
       height: 1px;
-      background: var(--border);
-      transform: scaleX(var(--line-scale));
+      background: currentColor;
+      opacity: 0.45;
+      transform: scaleX(var(--line-scale, 1));
       transform-origin: left center;
     }
 
+    .story-grid {
+      display: grid;
+      grid-template-columns: minmax(0, 0.9fr) minmax(0, 1.1fr);
+      gap: clamp(28px, 5vw, 76px);
+      align-items: start;
+    }
+
     .section-copy {
-      margin: 22px 0 0;
+      max-width: 640px;
+      margin: 28px 0 0;
+      font-size: clamp(18px, 1.6vw, 23px);
+      font-weight: 600;
+      line-height: 1.36;
     }
 
     .pills {
       display: flex;
       flex-wrap: wrap;
-      gap: 8px;
-      margin-top: 28px;
+      gap: 9px;
+      margin-top: 32px;
     }
 
     .pill {
-      padding: 5px 8px;
-      border: 0.5px solid var(--border);
-      border-radius: 2px;
+      display: inline-flex;
+      align-items: center;
+      min-height: 31px;
+      padding: 0 10px;
+      border: 1px solid var(--border-strong);
       color: var(--text-muted);
+      font-family: var(--mono);
       font-size: 10px;
       font-weight: 700;
-      letter-spacing: 0;
       line-height: 1;
       text-transform: uppercase;
     }
 
-    .side-stack {
+    .impact-grid {
       display: grid;
-      gap: 18px;
+      grid-template-columns: repeat(6, minmax(0, 1fr));
+      gap: 12px;
     }
 
-    .visual-frame {
-      margin: 0;
-      border: 0.5px solid var(--border);
-      background: var(--surface);
-    }
-
-    .visual-frame img {
-      width: 100%;
-      aspect-ratio: 4 / 3;
-      object-fit: cover;
-      filter: grayscale(1) contrast(1.1);
-    }
-
-    .visual-frame figcaption {
+    .impact-tile {
+      position: relative;
+      min-height: 190px;
       display: flex;
+      flex-direction: column;
       justify-content: space-between;
-      gap: 16px;
-      padding: 11px 12px;
-      color: var(--text-muted);
-      font-size: 10px;
-      font-weight: 700;
-      letter-spacing: 0;
-      line-height: 1.35;
-      text-transform: uppercase;
+      grid-column: span 3;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      overflow: hidden;
+      background: rgba(255, 248, 232, 0.06);
     }
 
-    .info-block {
-      border: 0.5px solid var(--accent-border);
-      background: var(--accent-dim);
+    .impact-tile.wide {
+      grid-column: span 6;
     }
 
-    .info-row {
+    .impact-tile.acid {
+      background: var(--accent);
+      color: var(--accent-text);
+      border-color: var(--accent);
+    }
+
+    .impact-tile.coral {
+      background: var(--coral);
+      color: var(--ink);
+      border-color: var(--coral);
+    }
+
+    .impact-tile.image {
+      min-height: 330px;
+      background: var(--background-soft);
+    }
+
+    .impact-tile.image img {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      filter: grayscale(0.55) saturate(1.2) contrast(1.08);
+    }
+
+    .impact-tile.image::after {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(180deg, rgba(8, 8, 6, 0.04), rgba(8, 8, 6, 0.68));
+    }
+
+    .tile-content {
+      position: relative;
+      z-index: 2;
       display: grid;
-      grid-template-columns: minmax(120px, 0.48fr) minmax(0, 1fr);
-      gap: 20px;
-      padding: 16px 18px;
+      gap: 16px;
+      padding: 20px;
     }
 
-    .info-row + .info-row {
-      border-top: 0.5px solid var(--accent-border);
+    .tile-number {
+      display: block;
+      font-family: var(--display);
+      font-size: clamp(52px, 7vw, 96px);
+      font-style: italic;
+      font-weight: 900;
+      line-height: 0.85;
     }
 
-    .info-row span {
-      color: var(--text-muted);
-      font-size: 10px;
-      font-weight: 700;
-      letter-spacing: 0;
+    .tile-copy {
+      margin: 0;
+      max-width: 460px;
+      font-size: 16px;
+      font-weight: 600;
+      line-height: 1.34;
+    }
+
+    .impact-tile.acid .tile-copy,
+    .impact-tile.coral .tile-copy {
+      color: rgba(8, 8, 6, 0.72);
+    }
+
+    .impact-tile.image .tile-copy,
+    .impact-tile.image .micro-label {
+      color: var(--text-primary);
+    }
+
+    .mission-section {
+      background:
+        linear-gradient(90deg, rgba(119, 231, 255, 0.12), transparent 42%),
+        var(--background);
+    }
+
+    .mission-layout {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) minmax(300px, 0.42fr);
+      gap: clamp(28px, 5vw, 80px);
+      align-items: end;
+    }
+
+    .statement {
+      margin: 0;
+      max-width: 960px;
+      font-family: var(--body);
+      font-size: clamp(42px, 7.6vw, 112px);
+      font-weight: 900;
+      line-height: 0.88;
       text-transform: uppercase;
     }
 
-    .info-row strong,
-    .info-row a {
-      color: var(--text-primary);
-      font-size: 13px;
+    .statement em {
+      color: var(--sky);
+      font-family: var(--display);
+      font-style: italic;
+      font-variation-settings: "SOFT" 70, "WONK" 1;
+      text-transform: none;
+    }
+
+    .side-note {
+      border-left: 3px solid var(--sky);
+      padding-left: 18px;
+    }
+
+    .side-note p {
+      margin: 12px 0 0;
+      color: var(--text-muted);
+      font-size: 18px;
       font-weight: 600;
+      line-height: 1.4;
     }
 
-    .info-row a {
-      color: var(--accent);
+    .actions-section {
+      overflow: hidden;
+      background:
+        linear-gradient(135deg, rgba(217, 255, 63, 0.16), transparent 38%),
+        linear-gradient(315deg, rgba(255, 90, 61, 0.16), transparent 42%),
+        #0d0e0a;
     }
 
-    .donate-band {
-      padding: 56px 40px;
+    .actions-head {
+      display: grid;
+      grid-template-columns: minmax(0, 0.84fr) minmax(260px, 0.36fr);
+      gap: clamp(24px, 5vw, 70px);
+      align-items: end;
+      margin-bottom: clamp(30px, 5vw, 62px);
+    }
+
+    .actions-note {
+      margin: 0;
+      color: var(--text-muted);
+      font-size: clamp(18px, 1.6vw, 24px);
+      font-weight: 650;
+      line-height: 1.34;
+    }
+
+    .actions-grid {
+      display: grid;
+      grid-template-columns: repeat(12, minmax(0, 1fr));
+      gap: 12px;
+    }
+
+    .action-card {
+      position: relative;
+      min-height: 260px;
+      grid-column: span 4;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      gap: 24px;
+      padding: clamp(18px, 2.4vw, 28px);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      overflow: hidden;
+      background: rgba(255, 248, 232, 0.07);
+    }
+
+    .action-card.featured {
+      grid-column: span 6;
+      min-height: 330px;
       background: var(--accent);
       color: var(--accent-text);
     }
 
+    .action-card.coral {
+      grid-column: span 6;
+      background: var(--coral);
+      color: var(--ink);
+    }
+
+    .action-card::before {
+      content: attr(data-count);
+      position: absolute;
+      right: -0.1em;
+      bottom: -0.28em;
+      color: rgba(255, 248, 232, 0.07);
+      font-family: var(--body);
+      font-size: clamp(140px, 16vw, 260px);
+      font-weight: 900;
+      line-height: 1;
+      pointer-events: none;
+    }
+
+    .action-card.featured::before,
+    .action-card.coral::before {
+      color: rgba(8, 8, 6, 0.12);
+    }
+
+    .action-meta {
+      position: relative;
+      z-index: 1;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+
+    .action-tag {
+      display: inline-flex;
+      align-items: center;
+      min-height: 28px;
+      padding: 0 9px;
+      border: 1px solid currentColor;
+      border-radius: 999px;
+      font-family: var(--mono);
+      font-size: 10px;
+      font-weight: 700;
+      line-height: 1;
+      text-transform: uppercase;
+    }
+
+    .action-card h3 {
+      position: relative;
+      z-index: 1;
+      max-width: 560px;
+      color: inherit;
+    }
+
+    .action-card p {
+      position: relative;
+      z-index: 1;
+      max-width: 520px;
+      margin: 14px 0 0;
+      color: var(--text-muted);
+      font-size: 17px;
+      font-weight: 600;
+      line-height: 1.34;
+    }
+
+    .action-card.featured p,
+    .action-card.coral p {
+      color: rgba(8, 8, 6, 0.68);
+    }
+
+    .action-status {
+      position: relative;
+      z-index: 1;
+      display: flex;
+      justify-content: space-between;
+      gap: 18px;
+      padding-top: 16px;
+      border-top: 1px solid currentColor;
+      font-family: var(--mono);
+      font-size: 10px;
+      font-weight: 700;
+      line-height: 1.2;
+      text-transform: uppercase;
+    }
+
+    .donate-band {
+      position: relative;
+      padding: clamp(58px, 9vw, 110px) clamp(18px, 3.3vw, 46px);
+      overflow: hidden;
+      background: var(--surface-strong);
+      color: var(--ink);
+    }
+
+    .donate-band::before {
+      content: "GEEF";
+      position: absolute;
+      right: -0.07em;
+      bottom: -0.21em;
+      color: rgba(8, 8, 6, 0.08);
+      font-family: var(--body);
+      font-size: clamp(140px, 28vw, 420px);
+      font-weight: 900;
+      line-height: 0.8;
+      pointer-events: none;
+    }
+
     .donate-inner {
-      width: min(100%, 1180px);
+      position: relative;
+      z-index: 1;
+      width: min(100%, var(--max-width));
       margin: 0 auto;
       display: grid;
       grid-template-columns: minmax(0, 1fr) auto;
-      gap: 32px;
-      align-items: center;
+      gap: 28px;
+      align-items: end;
     }
 
     .donate-band h2 {
-      color: var(--accent-text);
+      max-width: 920px;
+      color: var(--ink);
+      font-family: var(--body);
+      font-size: clamp(46px, 8vw, 126px);
+      font-weight: 900;
+      line-height: 0.82;
+      text-transform: uppercase;
     }
 
     .donate-band p {
-      margin: 12px 0 0;
-      color: rgba(12, 12, 11, 0.68);
-      font-weight: 600;
-    }
-
-    .button.dark {
-      border-color: var(--accent-text);
-      background: var(--accent-text);
-      color: var(--text-primary);
-      white-space: nowrap;
-    }
-
-    .button.dark:hover,
-    .button.dark:focus-visible {
-      background: transparent;
-      color: var(--accent-text);
-      outline: 0;
+      max-width: 620px;
+      margin: 22px 0 0;
+      color: rgba(8, 8, 6, 0.66);
+      font-size: clamp(18px, 1.6vw, 24px);
+      font-weight: 700;
+      line-height: 1.34;
     }
 
     .footer {
-      padding: 28px 40px;
+      padding: 30px clamp(18px, 3.3vw, 46px);
       color: var(--text-muted);
-      font-size: 11px;
+      font-family: var(--mono);
+      font-size: 10px;
+      font-weight: 700;
+      text-transform: uppercase;
     }
 
     .footer-inner {
@@ -593,8 +1259,9 @@
       z-index: 80;
       display: none;
       place-items: center;
-      padding: 24px;
-      background: rgba(12, 12, 11, 0.82);
+      padding: 20px;
+      background: rgba(8, 8, 6, 0.82);
+      backdrop-filter: blur(12px);
     }
 
     .modal.is-open {
@@ -602,9 +1269,14 @@
     }
 
     .modal-panel {
-      width: min(100%, 560px);
-      border: 0.5px solid var(--accent-border);
-      background: var(--surface);
+      width: min(100%, 620px);
+      max-height: calc(100svh - 40px);
+      overflow: auto;
+      border: 1px solid var(--ink);
+      border-radius: 8px;
+      background: var(--surface-strong);
+      color: var(--ink);
+      box-shadow: 14px 14px 0 var(--coral);
     }
 
     .modal-head {
@@ -613,35 +1285,44 @@
       gap: 20px;
       align-items: start;
       padding: 22px 24px;
-      border-bottom: 0.5px solid var(--border);
+      border-bottom: 1px solid rgba(8, 8, 6, 0.18);
     }
 
     .modal-title {
       display: grid;
-      gap: 5px;
+      gap: 8px;
     }
 
     .modal-title span {
-      color: var(--accent);
+      color: var(--coral);
+      font-family: var(--mono);
       font-size: 10px;
       font-weight: 700;
-      letter-spacing: 0;
       text-transform: uppercase;
     }
 
     .modal-title h3 {
-      font-size: 28px;
+      color: var(--ink);
+      font-size: clamp(34px, 6vw, 58px);
     }
 
     .modal-close {
-      width: 38px;
-      height: 38px;
-      border: 0.5px solid var(--border);
-      border-radius: 0;
+      width: 42px;
+      height: 42px;
+      border: 1px solid rgba(8, 8, 6, 0.24);
+      border-radius: 4px;
       background: transparent;
-      color: var(--text-primary);
-      font-size: 22px;
+      color: var(--ink);
+      font-size: 26px;
       line-height: 1;
+      transition: background 180ms var(--ease), transform 180ms var(--ease);
+    }
+
+    .modal-close:hover,
+    .modal-close:focus-visible {
+      background: var(--accent);
+      outline: 0;
+      transform: rotate(4deg);
     }
 
     .modal-body {
@@ -653,86 +1334,153 @@
     .donation-method {
       display: grid;
       gap: 8px;
-      padding: 16px 0;
-      border-top: 0.5px solid var(--border);
-    }
-
-    .donation-method:first-child {
-      border-top: 0;
-      padding-top: 0;
+      padding: 18px;
+      border: 1px solid rgba(8, 8, 6, 0.16);
+      border-radius: 8px;
+      background: rgba(8, 8, 6, 0.04);
     }
 
     .donation-method span {
-      color: var(--text-muted);
+      color: rgba(8, 8, 6, 0.58);
+      font-family: var(--mono);
       font-size: 10px;
       font-weight: 700;
-      letter-spacing: 0;
       text-transform: uppercase;
     }
 
     .donation-method strong,
     .donation-method a {
-      color: var(--text-primary);
-      font-size: 18px;
-      font-weight: 700;
+      color: var(--ink);
+      font-size: clamp(19px, 4vw, 28px);
+      font-weight: 900;
+      line-height: 1.08;
       overflow-wrap: anywhere;
     }
 
     .donation-method a {
-      color: var(--accent);
+      color: #005b6b;
+      text-decoration: underline;
+      text-decoration-thickness: 2px;
+      text-underline-offset: 4px;
+    }
+
+    .stripe-donation-form {
+      display: grid;
+      gap: 14px;
+    }
+
+    .donation-presets {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 8px;
+    }
+
+    .preset-button {
+      min-height: 42px;
+      border: 1px solid rgba(8, 8, 6, 0.2);
+      border-radius: 4px;
+      background: rgba(8, 8, 6, 0.05);
+      color: var(--ink);
+      font-family: var(--mono);
+      font-size: 11px;
+      font-weight: 700;
+    }
+
+    .preset-button.is-active,
+    .preset-button:hover,
+    .preset-button:focus-visible {
+      background: var(--accent);
+      outline: 0;
+    }
+
+    .donation-fields {
+      display: grid;
+      grid-template-columns: minmax(0, 0.36fr) minmax(0, 0.64fr);
+      gap: 10px;
+    }
+
+    .donation-field {
+      display: grid;
+      gap: 6px;
+    }
+
+    .donation-field label {
+      color: rgba(8, 8, 6, 0.58);
+      font-family: var(--mono);
+      font-size: 10px;
+      font-weight: 700;
+      text-transform: uppercase;
+    }
+
+    .donation-field input {
+      width: 100%;
+      min-height: 44px;
+      padding: 10px 12px;
+      border: 1px solid rgba(8, 8, 6, 0.18);
+      border-radius: 4px;
+      background: rgba(8, 8, 6, 0.045);
+      color: var(--ink);
+      outline: 0;
+    }
+
+    .donation-field input:focus {
+      border-color: var(--coral);
+      box-shadow: 0 0 0 3px rgba(255, 90, 61, 0.15);
     }
 
     .modal-actions {
       display: flex;
       flex-wrap: wrap;
       gap: 10px;
-      margin-top: 4px;
+      margin-top: 6px;
     }
 
     .modal-copy {
       margin: 0;
-      font-size: 13px;
+      color: rgba(8, 8, 6, 0.66);
+      font-size: 15px;
+      font-weight: 600;
     }
 
     .copy-status {
       min-height: 18px;
-      color: var(--accent);
+      color: var(--coral);
+      font-family: var(--mono);
       font-size: 11px;
       font-weight: 700;
-      letter-spacing: 0;
       text-transform: uppercase;
     }
 
-    @media (max-width: 900px) {
+    @media (max-width: 1040px) {
       .nav {
-        align-items: flex-start;
-        flex-direction: column;
+        grid-template-columns: 1fr auto;
       }
 
       .nav-links {
-        width: 100%;
+        grid-column: 1 / -1;
         justify-content: space-between;
-        gap: 12px;
-      }
-
-      .nav-link {
-        min-width: 0;
+        order: 3;
       }
 
       .hero,
-      .section.two-column .section-inner,
+      .story-grid,
+      .noah-layout,
+      .mission-layout,
+      .actions-head,
       .donate-inner {
         grid-template-columns: 1fr;
       }
 
       .hero {
-        padding-top: 46px;
+        min-height: auto;
       }
 
-      .hero-copy,
-      .progress-panel {
-        margin-left: auto;
-        margin-right: auto;
+      .hero-visual {
+        padding-bottom: 18px;
+      }
+
+      .noah-copy {
+        position: static;
       }
 
       .donate-inner {
@@ -740,188 +1488,482 @@
       }
     }
 
-    @media (max-width: 700px) {
+    @media (max-width: 720px) {
       :root {
-        --nav-height: 126px;
+        --nav-height: 128px;
       }
 
-      .nav,
-      .hero,
-      .section,
-      .donate-band,
-      .footer {
-        padding-left: 22px;
-        padding-right: 22px;
+      body {
+        font-size: 15px;
+      }
+
+      .nav {
+        gap: 12px;
       }
 
       .nav-links {
         display: grid;
         grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 8px;
       }
 
-      .nav-link strong,
-      .nav-link span {
-        overflow-wrap: anywhere;
+      .nav-link {
+        justify-content: center;
+        min-height: 34px;
+        border: 1px solid var(--border);
+        font-size: 9px;
+        text-align: center;
+      }
+
+      .nav-link::after {
+        display: none;
+      }
+
+      .button {
+        min-height: 44px;
+        padding: 0 14px;
+        font-size: 10px;
+      }
+
+      .nav > .button {
+        width: auto;
+      }
+
+      .hero {
+        padding-top: 34px;
+      }
+
+      h1 {
+        font-size: clamp(54px, 17vw, 86px);
+      }
+
+      .hero-body,
+      .section-copy {
+        font-size: 18px;
+      }
+
+      .button-row,
+      .modal-actions {
+        display: grid;
+      }
+
+      .button-row .button,
+      .modal-actions .button {
+        width: 100%;
+      }
+
+      .donation-presets,
+      .donation-fields {
+        grid-template-columns: 1fr;
+      }
+
+      .hero-visual {
+        padding-bottom: 18px;
       }
 
       .progress-panel {
-        padding: 24px 18px;
+        grid-template-columns: 1fr;
+        grid-template-areas:
+          "content"
+          "visual"
+          "total"
+          "footer";
+        min-height: auto;
+        box-shadow: 8px 8px 0 var(--sky);
+        transform: none;
       }
 
       .progress-visual {
-        width: 160px;
+        width: min(240px, 62vw);
+        margin: 0 auto;
+        justify-self: center;
       }
 
-      .progress-percent {
-        font-size: 34px;
+      .progress-label {
+        margin-bottom: 10px;
+      }
+
+      .progress-amount {
+        font-size: clamp(44px, 15vw, 72px);
+      }
+
+      .stats {
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 8px;
+      }
+
+      .stat {
+        padding: 13px 8px;
+      }
+
+      .stat strong {
+        font-size: 22px;
+      }
+
+      .noah-board {
+        box-shadow: 8px 8px 0 var(--accent);
+      }
+
+      .noah-photo-strip {
+        grid-template-columns: 1fr;
+        min-height: auto;
+      }
+
+      .noah-carousel {
+        min-height: 280px;
+      }
+
+      .noah-word {
+        min-height: 82px;
+        writing-mode: horizontal-tb;
+        transform: none;
+      }
+
+      .noah-fact {
+        grid-template-columns: 1fr;
+        gap: 5px;
+      }
+
+      .impact-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .impact-tile,
+      .impact-tile.wide {
+        grid-column: auto;
+      }
+
+      .impact-tile.image {
+        min-height: 280px;
+      }
+
+      .statement {
+        font-size: clamp(42px, 14vw, 72px);
+      }
+
+      .actions-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .action-card,
+      .action-card.featured,
+      .action-card.coral {
+        grid-column: auto;
+        min-height: 240px;
+      }
+
+      .footer-inner {
+        flex-direction: column;
+      }
+    }
+
+    @media (max-width: 430px) {
+      .nav {
+        grid-template-columns: 1fr;
+      }
+
+      .nav > .button {
+        width: 100%;
+      }
+
+      .nav-links {
+        grid-template-columns: 1fr;
+      }
+
+      .eyebrow span {
+        width: 100%;
+        justify-content: center;
+      }
+
+      .marquee span {
+        min-height: 46px;
       }
 
       .stats {
         grid-template-columns: 1fr;
       }
 
-      .stat + .stat {
-        border-left: 0;
-        border-top: 0.5px solid var(--border);
+      .stat {
+        padding: 14px 12px;
       }
+    }
 
-      .info-row {
-        grid-template-columns: 1fr;
-        gap: 4px;
-      }
-
-      .footer-inner {
-        flex-direction: column;
-      }
-
-      .button {
-        width: 100%;
+    @media (prefers-reduced-motion: reduce) {
+      *,
+      *::before,
+      *::after {
+        scroll-behavior: auto !important;
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
       }
     }
   </style>
 </head>
 <body>
-  <div id="loading-message" style="display: none; position: fixed; top: 0; left: 0; right: 0; background: var(--accent); color: var(--accent-text); padding: 12px; text-align: center; font-weight: 600; z-index: 9999;">
-    ⏳ Server is waking up... Please wait a few seconds and refresh.
+  <div id="loading-message" class="loading-message">
+    Server wordt wakker. Wacht een paar seconden en vernieuw de pagina.
   </div>
-  
+
   <nav class="nav" aria-label="Hoofdnavigatie">
-    <a class="logo" href="#top">Guido de Br&egrave;s &times; Noah's Ark</a>
+    <a class="logo" href="#top">
+      Guido de Br&egrave;s
+      <span>x Noah's Ark</span>
+    </a>
     <div class="nav-links">
-      <a class="nav-link" href="#over-ons">
-        <strong>Over het project</strong>
-        <span>Wie we zijn</span>
-      </a>
-      <a class="nav-link" href="#noahs-ark">
-        <strong>Noah's Ark</strong>
-        <span>De organisatie</span>
-      </a>
-      <a class="nav-link" href="#doneer">
-        <strong>Doneer</strong>
-        <span>Help mee</span>
-      </a>
+      <a class="nav-link" href="#noahs-ark">Noah's Ark</a>
+      <a class="nav-link" href="#over-ons">Over ons</a>
+      <a class="nav-link" href="#doneer">Doneer</a>
     </div>
+    <button class="button primary" type="button" data-open-donate>Geef nu</button>
   </nav>
 
   <main id="top">
     <section class="hero" aria-labelledby="hero-heading">
+      <div class="hero-bg-word" aria-hidden="true">Uganda</div>
+
       <div class="hero-copy">
-        <p class="eyebrow">( Guido de Br&egrave;s &middot; Actie 2026 )</p>
-        <p class="pre-heading">Van Niemand tot Iemand</p>
+        <p class="eyebrow">
+          <span>Actie 2027</span>
+          <span>Rotterdam naar Uganda</span>
+        </p>
         <h1 id="hero-heading" class="split-heading">
-          <span>Samen</span> <span>voor</span> <span>de</span> <span>kinderen</span> <span>van</span> <em><span>Noah's</span> <span>Ark</span></em>
+          <span>Van</span> <span>niemand</span> <span>tot</span> <em><span>iemand.</span></em>
         </h1>
-        <p class="hero-body">Wij zijn leerlingen van de Guido de Br&egrave;s en reizen in februari 2026 naar Uganda om Noah's Ark Children's Ministry te bezoeken en te steunen.</p>
+        <p class="hero-body">Wij zijn leerlingen van de Guido de Br&egrave;s. In februari 2027 reizen we naar Uganda om Noah's Ark Children's Ministry te bezoeken, mee te helpen en geld op te halen voor kinderen die zorg, onderwijs en veiligheid nodig hebben.</p>
         <div class="button-row">
-          <a class="button primary" href="#doneer">Doneer &rarr;</a>
-          <a class="button secondary" href="#over-ons">Over het project</a>
+          <button class="button primary" type="button" data-open-donate>Doneer direct</button>
+          <a class="button secondary" href="#noahs-ark">Bekijk het verhaal</a>
         </div>
       </div>
 
-      <aside class="progress-panel" aria-label="Donatiestand">
-        <div class="progress-label">
-          <span>( Live doel )</span>
-          <span id="last-updated">Nu</span>
-        </div>
-        <div class="progress-visual">
-          <svg viewBox="0 0 240 240" aria-hidden="true">
-            <circle class="progress-track" cx="120" cy="120" r="92"></circle>
-            <circle class="progress-value" id="progress-ring" cx="120" cy="120" r="92" transform="rotate(-90 120 120)"></circle>
-          </svg>
-          <div class="progress-center">
-            <div class="progress-percent" id="progress-percent">0%</div>
+      <div class="hero-visual" aria-label="Donatiestand">
+        <aside class="progress-panel" aria-label="Donatiestand">
+          <div class="progress-content">
+            <div class="progress-label">
+              <span>Live opgehaald</span>
+              <span id="last-updated">Nu</span>
+            </div>
+          </div>
+
+          <div class="progress-visual">
+            <svg viewBox="0 0 240 240" aria-hidden="true">
+              <circle class="progress-track" cx="120" cy="120" r="92"></circle>
+              <circle class="progress-value" id="progress-ring" cx="120" cy="120" r="92" transform="rotate(-90 120 120)"></circle>
+            </svg>
+            <div class="progress-center">
+              <div class="progress-percent" id="progress-percent">0%</div>
+            </div>
+          </div>
+
+          <div class="progress-total">
             <div class="progress-amount" id="progress-amount">&euro; 0</div>
             <div class="progress-goal" id="progress-goal">van &euro; 10.000</div>
           </div>
-        </div>
-        <div class="stats">
-          <div class="stat">
-            <strong id="stat-donors">0</strong>
-            <span>Donateurs</span>
+
+          <div class="progress-footer">
+            <div class="stats">
+              <div class="stat">
+                <strong id="stat-donors">0</strong>
+                <span>Donateurs</span>
+              </div>
+              <div class="stat">
+                <strong id="stat-days">0</strong>
+                <span>Tot vertrek</span>
+              </div>
+              <div class="stat">
+                <strong>Feb '27</strong>
+                <span>Vertrek</span>
+              </div>
+            </div>
+            <p class="live-status" id="live-status">Live zodra Supabase is ingevuld in config.js.</p>
           </div>
-          <div class="stat">
-            <strong id="stat-days">0</strong>
-            <span>Dagen</span>
-          </div>
-          <div class="stat">
-            <strong>Feb '26</strong>
-            <span>Vertrek</span>
-          </div>
-        </div>
-        <p class="live-status" id="live-status">Live zodra Supabase is ingevuld in config.js.</p>
-      </aside>
+        </aside>
+      </div>
     </section>
 
-    <section class="section two-column" id="noahs-ark" aria-labelledby="noahs-heading">
-      <div class="section-inner">
-        <div>
-          <p class="section-kicker">( 01 ) Over Noah's Ark</p>
-          <h2 id="noahs-heading">Van <em>Niemand</em> tot Iemand</h2>
-          <p class="section-copy">Noah's Ark Children and Youth Ministry Uganda ontfermt zich over kwetsbare kinderen die door omstandigheden zijn bestempeld als een 'niemand'. Ze bieden opvang, onderwijs en medische zorg aan kinderen die nergens anders terecht kunnen.</p>
+    <div class="marquee" aria-hidden="true">
+      <div class="marquee-track">
+        <span>Guido de Br&egrave;s</span>
+        <span><i>Van niemand tot iemand</i></span>
+        <span>Uganda 2027</span>
+        <span>Doel &euro;10.000</span>
+        <span>Guido de Br&egrave;s</span>
+        <span><i>Van niemand tot iemand</i></span>
+        <span>Uganda 2027</span>
+        <span>Doel &euro;10.000</span>
+      </div>
+    </div>
+
+    <section class="section noah-section" id="noahs-ark" aria-labelledby="noahs-heading">
+      <div class="section-inner noah-layout">
+        <div class="noah-copy">
+          <p class="section-kicker">01 / Noah's Ark</p>
+          <h2 id="noahs-heading">Een plek waar kinderen weer naam krijgen.</h2>
+          <p class="section-copy">Noah's Ark Children and Youth Ministry Uganda vangt kwetsbare kinderen op, geeft onderwijs en biedt medische zorg. Hun missie raakt precies de kern van deze actie: kinderen die als 'niemand' worden gezien, laten merken dat ze iemand zijn.</p>
           <div class="pills" aria-label="Programma's">
-            <span class="pill">Zorg &amp; Opvang</span>
+            <span class="pill">Zorg en opvang</span>
             <span class="pill">Onderwijs</span>
             <span class="pill">Gezondheid</span>
             <span class="pill">Uganda</span>
           </div>
         </div>
 
-        <div class="side-stack">
-          <figure class="visual-frame">
-            <img src="https://static.wixstatic.com/media/dbc557_8795d938e9e34e88a8b30f9ec010e991~mv2.jpg/v1/fill/w_303%2Ch_297%2Cal_c%2Cq_80%2Cenc_avif%2Cquality_auto/students.jpg" alt="Leerlingen die via Noah's Ark onderwijs krijgen" loading="lazy">
-            <figcaption>
-              <span>( NACMU )</span>
-              <span>Onderwijs mogelijk maken</span>
-            </figcaption>
-          </figure>
-          <div class="info-block">
-            <div class="info-row">
+        <div class="noah-board">
+          <div class="noah-photo-strip">
+            <div class="noah-carousel" data-carousel>
+              <figure class="noah-slide is-active">
+                <img src="https://static.wixstatic.com/media/dbc557_8795d938e9e34e88a8b30f9ec010e991~mv2.jpg/v1/fill/w_424,h_416,al_c,lg_1,q_80,enc_avif,quality_auto/students.jpg" alt="Leerlingen die via Noah's Ark onderwijs krijgen" loading="lazy">
+                <figcaption>Onderwijs mogelijk maken</figcaption>
+              </figure>
+              <figure class="noah-slide">
+                <img src="https://static.wixstatic.com/media/dbc557_f166b52426c14cbaab2d28f69267c7ed~mv2.jpg/v1/fill/w_484,h_484,al_c,q_80,usm_0.66_1.00_0.01,enc_avif,quality_auto/noah.jpg" alt="Een vrolijke jongen bij Noah's Ark" loading="lazy">
+                <figcaption>Zorg en opvang</figcaption>
+              </figure>
+              <figure class="noah-slide">
+                <img src="https://static.wixstatic.com/media/dbc557_13155c67e4154da880edf3b99025a86e~mv2.jpg/v1/fill/w_484,h_484,al_c,q_80,usm_0.66_1.00_0.01,enc_avif,quality_auto/nursery_girl.jpg" alt="Een meisje op school bij Noah's Ark" loading="lazy">
+                <figcaption>New Horizon scholen</figcaption>
+              </figure>
+              <figure class="noah-slide">
+                <img src="https://static.wixstatic.com/media/dbc557_77aaa8cf9b6842029215813518373cc2~mv2.jpg/v1/fill/w_1920,h_720,al_c/dbc557_77aaa8cf9b6842029215813518373cc2~mv2.jpg" alt="Kinderen aan tafel bij Noah's Ark" loading="lazy">
+                <figcaption>Een veilige plek</figcaption>
+              </figure>
+              <figure class="noah-slide">
+                <img src="https://static.wixstatic.com/media/dbc557_245972f30b304260a6c7937481c8691e~mv2.jpg/v1/fill/w_1920,h_720,al_c/dbc557_245972f30b304260a6c7937481c8691e~mv2.jpg" alt="Groep kinderen van Noah's Ark" loading="lazy">
+                <figcaption>Van niemand tot iemand</figcaption>
+              </figure>
+              <div class="carousel-controls">
+                <button class="carousel-button" type="button" data-carousel-prev aria-label="Vorige foto">&lsaquo;</button>
+                <div class="carousel-dots" aria-label="Foto's kiezen">
+                  <button class="carousel-dot is-active" type="button" data-carousel-dot="0" aria-label="Toon foto 1"></button>
+                  <button class="carousel-dot" type="button" data-carousel-dot="1" aria-label="Toon foto 2"></button>
+                  <button class="carousel-dot" type="button" data-carousel-dot="2" aria-label="Toon foto 3"></button>
+                  <button class="carousel-dot" type="button" data-carousel-dot="3" aria-label="Toon foto 4"></button>
+                  <button class="carousel-dot" type="button" data-carousel-dot="4" aria-label="Toon foto 5"></button>
+                </div>
+                <button class="carousel-button" type="button" data-carousel-next aria-label="Volgende foto">&rsaquo;</button>
+              </div>
+            </div>
+            <div class="noah-word" aria-hidden="true">Noah's Ark</div>
+          </div>
+
+          <div class="noah-facts" aria-label="Noah's Ark informatie">
+            <div class="noah-fact">
+              <span>Wat je geeft</span>
+              <strong>Schooldagen, maaltijden, opvang en medische zorg.</strong>
+            </div>
+            <div class="noah-fact">
               <span>Opgericht door</span>
-              <strong>Piet &amp; Pita Buitendijk</strong>
+              <strong>Piet en Pita Buitendijk</strong>
             </div>
-            <div class="info-row">
-              <span>Locatie</span>
-              <strong>Uganda</strong>
-            </div>
-            <div class="info-row">
+            <div class="noah-fact">
               <span>Status</span>
-              <strong>ANBI Erkend</strong>
+              <strong>ANBI erkend</strong>
             </div>
-            <div class="info-row">
+            <div class="noah-fact">
               <span>Website</span>
-              <a href="https://www.nacmu.nl" target="_blank" rel="noreferrer">nacmu.nl &rarr;</a>
+              <a href="https://www.nacmu.nl" target="_blank" rel="noreferrer">nacmu.nl</a>
             </div>
           </div>
         </div>
       </div>
     </section>
 
-    <section class="section single" id="over-ons" aria-labelledby="about-heading">
-      <div class="section-inner">
+    <section class="section mission-section" id="over-ons" aria-labelledby="about-heading">
+      <div class="section-inner mission-layout">
         <div>
-          <p class="section-kicker">( 02 ) Over ons</p>
-          <h2 id="about-heading">Leerlingen van de <em>Guido de Br&egrave;s</em></h2>
-          <p class="section-copy">Wij zijn een groep leerlingen van de Guido de Br&egrave;s. In februari 2027 reizen we af naar Uganda om zelf te zien wat Noah's Ark doet, mee te helpen en te laten zien dat ook wij het verschil willen maken. Met deze actie halen we de middelen op die daarvoor nodig zijn.</p>
+          <p class="section-kicker">02 / Over ons</p>
+          <p class="statement" id="about-heading">Wij gaan niet alleen kijken. We gaan <em>helpen.</em></p>
+        </div>
+        <div class="side-note">
+          <p class="micro-label">Guido de Br&egrave;s</p>
+          <p>In februari 2027 reizen we af naar Uganda om met eigen ogen te zien wat Noah's Ark doet. Met deze actie vragen we mensen om mee te bouwen aan iets groters dan onze reis alleen.</p>
+        </div>
+      </div>
+    </section>
+
+    <section class="section actions-section" id="acties" aria-labelledby="actions-heading">
+      <div class="section-inner">
+        <div class="actions-head">
+          <div>
+            <p class="section-kicker">03 / Lopende acties</p>
+            <h2 id="actions-heading">Iedere actie duwt de teller verder.</h2>
+          </div>
+          <p class="actions-note">Dit zijn de acties die nu lopen of binnenkort starten. Elk initiatief helpt ons dichter bij het doel voor Noah's Ark.</p>
+        </div>
+
+        <div class="actions-grid" id="actions-list" aria-label="Lopende fundraisingacties">
+          <article class="action-card featured" data-count="01">
+            <div class="action-meta">
+              <span class="action-tag">Loopt nu</span>
+              <span class="action-tag">Schoolactie</span>
+            </div>
+            <div>
+              <h3>Sponsorloop</h3>
+              <p>Leerlingen laten zich sponsoren per ronde en verzamelen zo direct donaties voor de reis en het project.</p>
+            </div>
+            <div class="action-status">
+              <span>Status</span>
+              <span>Actief</span>
+            </div>
+          </article>
+
+          <article class="action-card coral" data-count="02">
+            <div class="action-meta">
+              <span class="action-tag">Binnenkort</span>
+              <span class="action-tag">Samen</span>
+            </div>
+            <div>
+              <h3>Actiemarkt</h3>
+              <p>Een middag met kleine verkoopacties, eten, drinken en creatieve manieren om geld op te halen.</p>
+            </div>
+            <div class="action-status">
+              <span>Status</span>
+              <span>In voorbereiding</span>
+            </div>
+          </article>
+
+          <article class="action-card" data-count="03">
+            <div class="action-meta">
+              <span class="action-tag">Loopt nu</span>
+            </div>
+            <div>
+              <h3>Flessenactie</h3>
+              <p>Statiegeldflessen worden ingezameld en omgezet in concrete steun voor Noah's Ark.</p>
+            </div>
+            <div class="action-status">
+              <span>Impact</span>
+              <span>Elk bonnetje telt</span>
+            </div>
+          </article>
+
+          <article class="action-card" data-count="04">
+            <div class="action-meta">
+              <span class="action-tag">Doorlopend</span>
+            </div>
+            <div>
+              <h3>Persoonlijke sponsors</h3>
+              <p>Familie, vrienden en bekenden kunnen leerlingen persoonlijk sponsoren of direct bijdragen aan het gezamenlijke doel.</p>
+            </div>
+            <div class="action-status">
+              <span>Status</span>
+              <span>Open</span>
+            </div>
+          </article>
+
+          <article class="action-card" data-count="05">
+            <div class="action-meta">
+              <span class="action-tag">Team</span>
+            </div>
+            <div>
+              <h3>Lokale verkoop</h3>
+              <p>Kleine verkoopacties in de buurt en op school maken het makkelijk om laagdrempelig mee te doen.</p>
+            </div>
+            <div class="action-status">
+              <span>Status</span>
+              <span>Wordt gepland</span>
+            </div>
+          </article>
         </div>
       </div>
     </section>
@@ -929,18 +1971,19 @@
     <section class="donate-band" id="doneer" aria-labelledby="donate-heading">
       <div class="donate-inner">
         <div>
+          <p class="micro-label">04 / Doneer</p>
           <h2 id="donate-heading">Help ons &euro;10.000 ophalen</h2>
-          <p>Doneer via Tikkie of bankoverschrijving - elk bedrag telt.</p>
+          <p>Doneer veilig via iDEAL, kaart, Tikkie of bankoverschrijving. Elk bedrag helpt om opvang, onderwijs en zorg dichterbij te brengen.</p>
         </div>
-        <button class="button dark" type="button" data-open-donate>Doneer nu &rarr;</button>
+        <button class="button dark" type="button" data-open-donate>Doneer nu</button>
       </div>
     </section>
   </main>
 
   <footer class="footer">
     <div class="footer-inner">
-      <span>&copy; 2025 - Guido de Br&egrave;s &times; Noah's Ark Uganda</span>
-      <a href="https://www.nacmu.nl" target="_blank" rel="noreferrer">nacmu.nl &rarr;</a>
+      <span>&copy; 2026 Guido de Br&egrave;s x Noah's Ark Uganda</span>
+      <a href="https://www.nacmu.nl" target="_blank" rel="noreferrer">nacmu.nl</a>
     </div>
   </footer>
 
@@ -948,12 +1991,40 @@
     <div class="modal-panel">
       <div class="modal-head">
         <div class="modal-title">
-          <span>( Doneer )</span>
-          <h3 id="modal-title">Zo doneer je</h3>
+          <span>Doneer</span>
+          <h3 id="modal-title">Zo help je mee</h3>
         </div>
         <button class="modal-close" type="button" data-close-donate aria-label="Sluiten">&times;</button>
       </div>
       <div class="modal-body">
+        <div class="donation-method">
+          <span>Stripe checkout</span>
+          <form class="stripe-donation-form" id="stripe-donation-form">
+            <div class="donation-presets" aria-label="Kies bedrag">
+              <button class="preset-button is-active" type="button" data-donation-amount="10">&euro;10</button>
+              <button class="preset-button" type="button" data-donation-amount="25">&euro;25</button>
+              <button class="preset-button" type="button" data-donation-amount="50">&euro;50</button>
+              <button class="preset-button" type="button" data-donation-amount="100">&euro;100</button>
+            </div>
+            <div class="donation-fields">
+              <div class="donation-field">
+                <label for="stripe-amount">Bedrag (&euro;)</label>
+                <input id="stripe-amount" name="amount" type="number" min="1" max="5000" step="1" value="10" required>
+              </div>
+              <div class="donation-field">
+                <label for="stripe-name">Naam</label>
+                <input id="stripe-name" name="donor_name" type="text" placeholder="Mag leeg blijven">
+              </div>
+            </div>
+            <div class="donation-field">
+              <label for="stripe-note">Notitie</label>
+              <input id="stripe-note" name="note" type="text" placeholder="Bijvoorbeeld: succes met de reis">
+            </div>
+            <div class="modal-actions">
+              <button class="button dark" type="submit">Doneer met iDEAL / kaart</button>
+            </div>
+          </form>
+        </div>
         <div class="donation-method">
           <span>IBAN</span>
           <strong id="donate-iban">[IBAN invullen]</strong>
@@ -966,8 +2037,8 @@
           <span>Tikkie</span>
           <a id="donate-tikkie" href="#" target="_blank" rel="noreferrer">[Tikkie link invullen]</a>
         </div>
-        <p class="modal-copy">Vermeld je naam bij de overboeking zodat we je kunnen bedanken.</p>
-        <p class="modal-copy" style="font-size: 0.9em; color: var(--text-muted);">✓ Donaties kunnen aftrekbaar zijn van belasting. Vraag je belastingadviseur.</p>
+        <p class="modal-copy">Stripe stuurt je naar een veilige betaalpagina. IBAN en Tikkie blijven beschikbaar als alternatief.</p>
+        <p class="modal-copy">Donaties kunnen aftrekbaar zijn van belasting. Vraag je belastingadviseur.</p>
         <div class="copy-status" id="copy-status" aria-live="polite"></div>
       </div>
     </div>
@@ -980,7 +2051,7 @@
     (function () {
       "use strict";
 
-      var config = window.NAF_CONFIG || {};
+      var config = Object.assign({}, window.NAF_CONFIG || {}, loadLocalPreviewSettings());
       var goal = Number(config.GOAL_EUR || 10000);
       var targetDate = config.TARGET_DATE || "2027-02-01";
       var supabaseUrl = cleanUrl(config.SUPABASE_URL || "");
@@ -1009,12 +2080,28 @@
       document.getElementById("stat-days").textContent = numberFormat.format(rendered.days);
       fillDonateModal();
       bindDonateModal();
+      bindStripeDonation();
+      bindNoahCarousel();
+      renderFundraisingActions();
+      syncReturnedStripePayment();
       loadDonationStats();
       window.setInterval(loadDonationStats, 60000);
       runAnimations();
 
       function cleanUrl(url) {
         return String(url || "").replace(/\/+$/, "");
+      }
+
+      function loadLocalPreviewSettings() {
+        if (window.location.protocol !== "file:") {
+          return {};
+        }
+
+        try {
+          return JSON.parse(window.localStorage.getItem("naf_local_settings") || "{}") || {};
+        } catch (error) {
+          return {};
+        }
       }
 
       function hasSupabaseConfig() {
@@ -1229,128 +2316,345 @@
         }
       }
 
+      function bindStripeDonation() {
+        var form = document.getElementById("stripe-donation-form");
+        if (!form) {
+          return;
+        }
+
+        var amountInput = document.getElementById("stripe-amount");
+        var status = document.getElementById("copy-status");
+        var submitButton = form.querySelector("button[type='submit']");
+        var presetButtons = Array.prototype.slice.call(form.querySelectorAll("[data-donation-amount]"));
+
+        presetButtons.forEach(function (button) {
+          button.addEventListener("click", function () {
+            amountInput.value = button.getAttribute("data-donation-amount");
+            presetButtons.forEach(function (preset) {
+              preset.classList.toggle("is-active", preset === button);
+            });
+          });
+        });
+
+        amountInput.addEventListener("input", function () {
+          presetButtons.forEach(function (preset) {
+            preset.classList.toggle("is-active", preset.getAttribute("data-donation-amount") === amountInput.value);
+          });
+        });
+
+        form.addEventListener("submit", async function (event) {
+          event.preventDefault();
+
+          if (window.location.protocol === "file:") {
+            status.textContent = "Start app.py om Stripe lokaal te testen.";
+            return;
+          }
+
+          var amount = Number(amountInput.value);
+          if (!amount || amount < 1) {
+            status.textContent = "Vul minimaal 1 euro in.";
+            return;
+          }
+
+          try {
+            submitButton.disabled = true;
+            status.textContent = "Betaalpagina maken...";
+            var response = await fetch("/api/stripe/checkout-session", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({
+                amount: amount,
+                donor_name: document.getElementById("stripe-name").value.trim(),
+                note: document.getElementById("stripe-note").value.trim()
+              })
+            });
+
+            if (!response.ok) {
+              throw await response.json();
+            }
+
+            var body = await response.json();
+            window.location.href = body.url;
+          } catch (error) {
+            status.textContent = error.error || "Stripe betaling kon niet starten.";
+          } finally {
+            submitButton.disabled = false;
+          }
+        });
+      }
+
+      async function syncReturnedStripePayment() {
+        if (window.location.protocol === "file:") {
+          return;
+        }
+
+        var params = new URLSearchParams(window.location.search);
+        var payment = params.get("payment");
+        var sessionId = params.get("session_id");
+        var status = document.getElementById("copy-status");
+
+        if (payment === "cancelled") {
+          status.textContent = "Betaling geannuleerd.";
+          return;
+        }
+
+        if (payment !== "success" || !sessionId) {
+          return;
+        }
+
+        try {
+          status.textContent = "Betaling controleren...";
+          var response = await fetch("/api/stripe/sync-session", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ session_id: sessionId })
+          });
+
+          if (!response.ok) {
+            throw await response.json();
+          }
+
+          status.textContent = "Dankjewel, betaling ontvangen.";
+          document.getElementById("live-status").textContent = "Betaling ontvangen. Donatiestand wordt bijgewerkt.";
+          await loadDonationStats();
+          window.history.replaceState({}, document.title, window.location.pathname + window.location.hash);
+        } catch (error) {
+          status.textContent = error.error || "Betaling kon nog niet worden bevestigd.";
+        }
+      }
+
+      function bindNoahCarousel() {
+        var carousel = document.querySelector("[data-carousel]");
+        if (!carousel) {
+          return;
+        }
+
+        var slides = Array.prototype.slice.call(carousel.querySelectorAll(".noah-slide"));
+        var dots = Array.prototype.slice.call(carousel.querySelectorAll("[data-carousel-dot]"));
+        var previousButton = carousel.querySelector("[data-carousel-prev]");
+        var nextButton = carousel.querySelector("[data-carousel-next]");
+        var currentIndex = 0;
+        var timer = null;
+
+        if (!slides.length) {
+          return;
+        }
+
+        showSlide(0);
+        startTimer();
+
+        if (previousButton) {
+          previousButton.addEventListener("click", function () {
+            showSlide(currentIndex - 1);
+            startTimer();
+          });
+        }
+
+        if (nextButton) {
+          nextButton.addEventListener("click", function () {
+            showSlide(currentIndex + 1);
+            startTimer();
+          });
+        }
+
+        dots.forEach(function (dot) {
+          dot.addEventListener("click", function () {
+            showSlide(Number(dot.getAttribute("data-carousel-dot")) || 0);
+            startTimer();
+          });
+        });
+
+        carousel.addEventListener("mouseenter", stopTimer);
+        carousel.addEventListener("mouseleave", startTimer);
+        carousel.addEventListener("focusin", stopTimer);
+        carousel.addEventListener("focusout", startTimer);
+
+        function showSlide(nextIndex) {
+          currentIndex = (nextIndex + slides.length) % slides.length;
+          slides.forEach(function (slide, index) {
+            var active = index === currentIndex;
+            slide.classList.toggle("is-active", active);
+            slide.setAttribute("aria-hidden", active ? "false" : "true");
+          });
+          dots.forEach(function (dot, index) {
+            var active = index === currentIndex;
+            dot.classList.toggle("is-active", active);
+            dot.setAttribute("aria-current", active ? "true" : "false");
+          });
+        }
+
+        function startTimer() {
+          stopTimer();
+          if (reducedMotion || slides.length < 2) {
+            return;
+          }
+          timer = window.setInterval(function () {
+            showSlide(currentIndex + 1);
+          }, 5200);
+        }
+
+        function stopTimer() {
+          if (timer) {
+            window.clearInterval(timer);
+            timer = null;
+          }
+        }
+      }
+
+      function renderFundraisingActions() {
+        var list = document.getElementById("actions-list");
+        var actions = Array.isArray(config.ACTIONS) ? config.ACTIONS : [];
+        if (!list || !actions.length) {
+          return;
+        }
+
+        list.innerHTML = "";
+        actions.forEach(function (action, index) {
+          var article = document.createElement("article");
+          var variant = action.variant === "featured" || action.variant === "coral" ? action.variant : "";
+          article.className = "action-card" + (variant ? " " + variant : "");
+          article.setAttribute("data-count", String(index + 1).padStart(2, "0"));
+
+          var meta = document.createElement("div");
+          meta.className = "action-meta";
+          (Array.isArray(action.tags) ? action.tags : []).slice(0, 4).forEach(function (tag) {
+            if (!tag) {
+              return;
+            }
+            var tagElement = document.createElement("span");
+            tagElement.className = "action-tag";
+            tagElement.textContent = tag;
+            meta.appendChild(tagElement);
+          });
+          article.appendChild(meta);
+
+          var copy = document.createElement("div");
+          var title = document.createElement("h3");
+          title.textContent = action.title || "Nieuwe actie";
+          var description = document.createElement("p");
+          description.textContent = action.description || "";
+          copy.appendChild(title);
+          copy.appendChild(description);
+          article.appendChild(copy);
+
+          var status = document.createElement("div");
+          status.className = "action-status";
+          var label = document.createElement("span");
+          label.textContent = action.status_label || "Status";
+          var value = document.createElement("span");
+          value.textContent = action.status || "Open";
+          status.appendChild(label);
+          status.appendChild(value);
+          article.appendChild(status);
+
+          list.appendChild(article);
+        });
+      }
+
       function runAnimations() {
         if (reducedMotion || !window.gsap) {
           return;
         }
 
         gsap.registerPlugin(ScrollTrigger);
-        gsap.from(".nav", { y: -10, opacity: 0, duration: 0.5, ease: "power2.out" });
-        gsap.from(".hero .eyebrow, .hero .pre-heading", {
+
+        gsap.from(".nav", { y: -18, opacity: 0, duration: 0.6, ease: "power3.out" });
+        gsap.from(".eyebrow span", {
           y: 18,
           opacity: 0,
-          duration: 0.7,
-          stagger: 0.08,
+          duration: 0.6,
+          stagger: 0.06,
           delay: 0.1,
           ease: "power3.out"
         });
         gsap.from(".split-heading span", {
-          y: 40,
+          yPercent: 82,
           opacity: 0,
-          duration: 0.8,
-          stagger: 0.08,
-          delay: 0.24,
-          ease: "power3.out"
+          rotate: 2,
+          duration: 0.9,
+          stagger: 0.055,
+          delay: 0.18,
+          ease: "power4.out"
         });
         gsap.from(".hero-body, .button-row", {
-          y: 24,
+          y: 26,
           opacity: 0,
           duration: 0.75,
-          stagger: 0.1,
-          delay: 0.7,
+          stagger: 0.08,
+          delay: 0.68,
           ease: "power3.out"
         });
         gsap.from(".progress-panel", {
-          y: 28,
+          y: 38,
+          rotate: -1.8,
           opacity: 0,
-          duration: 0.9,
-          delay: 0.35,
-          ease: "power3.out"
+          duration: 1,
+          delay: 0.34,
+          ease: "power4.out"
         });
 
         gsap.utils.toArray(".section").forEach(function (section) {
-          gsap.from(section.querySelector(".section-kicker"), {
-            opacity: 0,
-            y: 18,
-            duration: 0.6,
-            scrollTrigger: { trigger: section, start: "top 76%" }
-          });
-          gsap.from(section.querySelector(".section-kicker"), {
-            "--line-scale": 0,
-            duration: 0.8,
-            scrollTrigger: { trigger: section, start: "top 76%" }
-          });
-          gsap.from(section.querySelectorAll("h2, .section-copy, .pill, .visual-frame"), {
-            y: 32,
-            opacity: 0,
-            duration: 0.75,
-            stagger: 0.08,
-            ease: "power3.out",
-            scrollTrigger: { trigger: section, start: "top 72%" }
-          });
-          gsap.from(section.querySelectorAll(".info-row"), {
-            x: -16,
-            opacity: 0,
-            duration: 0.55,
-            stagger: 0.06,
-            ease: "power3.out",
-            scrollTrigger: { trigger: section, start: "top 72%" }
-          });
-        });
+          var kicker = section.querySelector(".section-kicker");
+          if (kicker) {
+            gsap.from(kicker, {
+              opacity: 0,
+              y: 18,
+              duration: 0.6,
+              scrollTrigger: { trigger: section, start: "top 76%" }
+            });
+            gsap.from(kicker, {
+              "--line-scale": 0,
+              duration: 0.85,
+              ease: "power3.out",
+              scrollTrigger: { trigger: section, start: "top 76%" }
+            });
+          }
 
-        gsap.from(".donate-band", {
-          y: 24,
-          opacity: 0.01,
-          duration: 0.7,
-          ease: "power3.out",
-          scrollTrigger: { trigger: ".donate-band", start: "top 82%" }
+          gsap.from(section.querySelectorAll("h2, .statement, .section-copy, .pill, .noah-board, .noah-fact, .impact-tile, .action-card, .actions-note, .side-note, .donate-inner > *"), {
+            y: 34,
+            opacity: 0,
+            duration: 0.78,
+            stagger: 0.07,
+            ease: "power3.out",
+            scrollTrigger: { trigger: section, start: "top 72%" }
+          });
         });
       }
     })();
   </script>
 
   <script>
-    // Check server health on load and periodically
     (function() {
-      const loadingMessage = document.getElementById('loading-message');
-      let lastCheck = 0;
+      const loadingMessage = document.getElementById("loading-message");
 
       async function checkHealth() {
         try {
-          const response = await fetch('/api/health', { method: 'GET', cache: 'no-store' });
+          const response = await fetch("/api/health", { method: "GET", cache: "no-store" });
           if (response.ok) {
-            loadingMessage.style.display = 'none';
+            loadingMessage.style.display = "none";
             return true;
           }
         } catch (error) {
-          // Server might be down
+          // Free hosting can sleep; the banner only appears after a fetch failure.
         }
         return false;
       }
 
-      // Check immediately
       checkHealth();
 
-      // If page doesn't load properly, show loading message and retry
-      window.addEventListener('error', function(event) {
-        if (event.message && event.message.includes('Failed to fetch')) {
-          loadingMessage.style.display = 'block';
+      window.addEventListener("error", function(event) {
+        if (event.message && event.message.includes("Failed to fetch")) {
+          loadingMessage.style.display = "block";
         }
       });
 
-      // Also check periodically and show message if server is unreachable
-      function periodicCheck() {
-        checkHealth().then(ok => {
-          if (!ok) {
-            loadingMessage.style.display = 'block';
-          }
-        });
-      }
-
-      // Check every 3 seconds if message is shown
       setInterval(function() {
-        if (loadingMessage.style.display === 'block') {
-          periodicCheck();
+        if (loadingMessage.style.display === "block") {
+          checkHealth().then(function(ok) {
+            if (!ok) {
+              loadingMessage.style.display = "block";
+            }
+          });
         }
       }, 3000);
     })();

@@ -8,21 +8,29 @@
   <link rel="icon" href="favicon.svg" type="image/svg+xml">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Playfair+Display:ital,wght@0,600;0,700;1,600&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght,SOFT,WONK@9..144,600..900,0..100,0..1&family=Inter+Tight:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
   <style>
     :root {
-      --background: #0C0C0B;
-      --surface: #141413;
-      --text-primary: #F0EDE6;
-      --text-muted: rgba(240, 237, 230, 0.38);
-      --text-faint: rgba(240, 237, 230, 0.2);
-      --border: rgba(240, 237, 230, 0.1);
-      --accent: #F0B429;
-      --accent-dim: rgba(240, 180, 41, 0.12);
-      --accent-border: rgba(240, 180, 41, 0.25);
-      --accent-text: #0C0C0B;
-      --display: "Playfair Display", Georgia, serif;
-      --body: "Inter", system-ui, sans-serif;
+      --background: #080806;
+      --background-soft: #10110d;
+      --surface: rgba(255, 248, 230, 0.08);
+      --surface-strong: #f8efd8;
+      --text-primary: #fff8e8;
+      --text-muted: rgba(255, 248, 232, 0.66);
+      --text-faint: rgba(255, 248, 232, 0.36);
+      --ink: #080806;
+      --border: rgba(255, 248, 232, 0.18);
+      --border-strong: rgba(255, 248, 232, 0.34);
+      --acid: #d9ff3f;
+      --coral: #ff5a3d;
+      --sky: #77e7ff;
+      --accent: var(--acid);
+      --accent-text: #080806;
+      --display: "Fraunces", Georgia, serif;
+      --body: "Inter Tight", system-ui, sans-serif;
+      --mono: "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, monospace;
+      --max-width: 1240px;
+      --ease: cubic-bezier(0.22, 1, 0.36, 1);
     }
 
     * {
@@ -35,17 +43,48 @@
     }
 
     body {
+      min-width: 320px;
       margin: 0;
-      background: var(--background);
+      overflow-x: hidden;
+      isolation: isolate;
+      background:
+        linear-gradient(90deg, rgba(255, 248, 232, 0.045) 1px, transparent 1px) 0 0 / 74px 74px,
+        linear-gradient(0deg, rgba(255, 248, 232, 0.035) 1px, transparent 1px) 0 0 / 74px 74px,
+        repeating-linear-gradient(135deg, rgba(217, 255, 63, 0.045) 0 1px, transparent 1px 16px),
+        var(--background);
       color: var(--text-primary);
       font-family: var(--body);
-      font-size: 14px;
-      line-height: 1.7;
+      font-size: 15px;
+      line-height: 1.55;
       letter-spacing: 0;
+      text-rendering: geometricPrecision;
+    }
+
+    body::before {
+      content: "";
+      position: fixed;
+      inset: 0;
+      z-index: 0;
+      pointer-events: none;
+      opacity: 0.22;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180' viewBox='0 0 180 180'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.72' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='180' height='180' filter='url(%23n)' opacity='.42'/%3E%3C/svg%3E");
+      mix-blend-mode: soft-light;
+    }
+
+    body > * {
+      position: relative;
+      z-index: 1;
+    }
+
+    a {
+      color: inherit;
+      text-decoration: none;
     }
 
     button,
-    input {
+    input,
+    textarea,
+    select {
       font: inherit;
     }
 
@@ -53,9 +92,74 @@
       cursor: pointer;
     }
 
-    a {
+    h1,
+    h2,
+    h3,
+    p {
+      margin: 0;
+    }
+
+    h1 {
+      max-width: 850px;
+      font-family: var(--body);
+      font-size: clamp(52px, 8vw, 118px);
+      font-weight: 900;
+      line-height: 0.82;
+      text-transform: uppercase;
+    }
+
+    h1 em {
       color: var(--accent);
-      text-decoration: none;
+      font-family: var(--display);
+      font-style: italic;
+      font-variation-settings: "SOFT" 80, "WONK" 1;
+      text-transform: none;
+    }
+
+    h2 {
+      color: inherit;
+      font-family: var(--display);
+      font-size: clamp(30px, 4vw, 52px);
+      font-weight: 850;
+      line-height: 0.96;
+      font-variation-settings: "SOFT" 54, "WONK" 1;
+    }
+
+    h3 {
+      font-size: 18px;
+      font-weight: 900;
+      line-height: 1;
+      text-transform: uppercase;
+    }
+
+    label,
+    th,
+    .kicker,
+    .micro-label {
+      color: var(--accent);
+      font-family: var(--mono);
+      font-size: 10px;
+      font-weight: 700;
+      line-height: 1.2;
+      text-transform: uppercase;
+    }
+
+    .muted {
+      color: var(--text-muted);
+    }
+
+    .loading-message {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      z-index: 9999;
+      display: none;
+      padding: 12px 18px;
+      background: var(--accent);
+      color: var(--accent-text);
+      font-weight: 800;
+      text-align: center;
     }
 
     .gate {
@@ -66,10 +170,29 @@
     }
 
     .gate-panel {
-      width: min(100%, 430px);
-      border: 0.5px solid var(--border);
-      background: var(--surface);
-      padding: 28px;
+      width: min(100%, 520px);
+      display: grid;
+      gap: 18px;
+      padding: clamp(24px, 5vw, 46px);
+      border: 1px solid var(--ink);
+      border-radius: 8px;
+      background: var(--surface-strong);
+      color: var(--ink);
+      box-shadow: 14px 14px 0 var(--coral);
+    }
+
+    .gate-panel .kicker {
+      color: var(--coral);
+    }
+
+    .gate-panel h1 {
+      color: var(--ink);
+      font-size: clamp(42px, 11vw, 76px);
+    }
+
+    .gate-panel .muted {
+      color: rgba(8, 8, 6, 0.66);
+      font-weight: 650;
     }
 
     .app {
@@ -82,109 +205,135 @@
     }
 
     .topbar {
-      display: flex;
-      justify-content: space-between;
+      position: sticky;
+      top: 0;
+      z-index: 20;
+      display: grid;
+      grid-template-columns: minmax(180px, 1fr) auto;
       gap: 20px;
       align-items: center;
-      padding: 18px 40px;
-      border-bottom: 0.5px solid var(--border);
-      background: rgba(12, 12, 11, 0.94);
+      padding: 16px clamp(18px, 3.3vw, 46px);
+      border-bottom: 1px solid var(--border);
+      background: rgba(8, 8, 6, 0.72);
+      backdrop-filter: blur(18px);
     }
 
     .brand {
+      display: grid;
+      width: fit-content;
+      gap: 2px;
       color: var(--text-primary);
+      font-family: var(--mono);
       font-size: 12px;
       font-weight: 700;
-      letter-spacing: 0;
+      line-height: 1.05;
       text-transform: uppercase;
+    }
+
+    .brand span {
+      color: var(--accent);
+    }
+
+    .top-actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      justify-content: end;
     }
 
     .admin-wrap {
-      width: min(100%, 1180px);
+      width: min(100%, var(--max-width));
       margin: 0 auto;
-      padding: 40px;
+      padding: clamp(34px, 5vw, 72px) clamp(18px, 3.3vw, 46px) 80px;
     }
 
-    h1,
-    h2 {
-      margin: 0;
-      font-family: var(--display);
-      font-weight: 700;
-      letter-spacing: 0;
-      line-height: 1.08;
+    .hero-admin {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) minmax(280px, 0.34fr);
+      gap: clamp(28px, 5vw, 70px);
+      align-items: end;
+      margin-bottom: 34px;
     }
 
-    h1 {
-      font-size: clamp(34px, 5vw, 48px);
-    }
-
-    h2 {
-      font-size: 28px;
-    }
-
-    .kicker {
-      margin: 0 0 8px;
-      color: var(--accent);
-      font-size: 10px;
-      font-weight: 700;
-      letter-spacing: 0;
-      text-transform: uppercase;
-    }
-
-    .muted {
+    .hero-note {
       color: var(--text-muted);
+      font-size: clamp(18px, 1.8vw, 24px);
+      font-weight: 650;
+      line-height: 1.34;
     }
 
     .summary {
       display: grid;
-      grid-template-columns: repeat(4, 1fr);
-      margin: 32px 0;
-      border: 0.5px solid var(--border);
-      background: var(--surface);
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 10px;
+      margin: 34px 0;
     }
 
     .summary-item {
-      padding: 20px;
       min-width: 0;
-    }
-
-    .summary-item + .summary-item {
-      border-left: 0.5px solid var(--border);
-    }
-
-    .summary-item span,
-    label,
-    th {
-      color: var(--text-muted);
-      font-size: 10px;
-      font-weight: 700;
-      letter-spacing: 0;
-      text-transform: uppercase;
+      padding: 20px;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      background: rgba(255, 248, 232, 0.07);
     }
 
     .summary-item strong {
       display: block;
       margin-top: 9px;
       overflow-wrap: anywhere;
-      font-size: clamp(20px, 3vw, 30px);
-      line-height: 1.1;
+      font-size: clamp(24px, 3vw, 40px);
+      font-weight: 900;
+      line-height: 1;
     }
 
-    .grid {
+    .summary-item.acid {
+      border-color: var(--accent);
+      background: var(--accent);
+      color: var(--ink);
+    }
+
+    .summary-item.acid .micro-label {
+      color: rgba(8, 8, 6, 0.68);
+    }
+
+    .dashboard-grid {
       display: grid;
-      grid-template-columns: minmax(280px, 0.42fr) minmax(0, 1fr);
-      gap: 28px;
+      grid-template-columns: minmax(280px, 0.4fr) minmax(0, 1fr);
+      gap: 24px;
       align-items: start;
     }
 
     .panel {
-      border: 0.5px solid var(--border);
-      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      overflow: hidden;
+      background: rgba(255, 248, 232, 0.07);
+    }
+
+    .panel.light {
+      border-color: var(--ink);
+      background: var(--surface-strong);
+      color: var(--ink);
+      box-shadow: 10px 10px 0 var(--sky);
+    }
+
+    .panel.light .kicker,
+    .panel.light label {
+      color: var(--coral);
     }
 
     .panel-head {
+      display: flex;
+      justify-content: space-between;
+      gap: 18px;
+      align-items: start;
       padding: 20px 22px;
-      border-bottom: 0.5px solid var(--border);
+      border-bottom: 1px solid currentColor;
+      border-color: var(--border);
+    }
+
+    .panel.light .panel-head {
+      border-color: rgba(8, 8, 6, 0.18);
     }
 
     .panel-body {
@@ -199,38 +348,85 @@
     .field {
       display: grid;
       gap: 7px;
+      min-width: 0;
     }
 
-    input {
+    .field-row {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 12px;
+    }
+
+    input,
+    textarea,
+    select {
       width: 100%;
       min-height: 44px;
-      padding: 9px 11px;
-      border: 0.5px solid var(--border);
-      border-radius: 0;
-      background: #0F0F0E;
+      padding: 10px 12px;
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      background: rgba(8, 8, 6, 0.44);
       color: var(--text-primary);
       outline: 0;
     }
 
-    input:focus {
+    textarea {
+      min-height: 96px;
+      resize: vertical;
+    }
+
+    .panel.light input,
+    .panel.light textarea,
+    .panel.light select,
+    .gate-panel input {
+      border-color: rgba(8, 8, 6, 0.18);
+      background: rgba(8, 8, 6, 0.045);
+      color: var(--ink);
+    }
+
+    input:focus,
+    textarea:focus,
+    select:focus {
       border-color: var(--accent);
+      box-shadow: 0 0 0 3px rgba(217, 255, 63, 0.16);
+    }
+
+    .panel.light input:focus,
+    .panel.light textarea:focus,
+    .panel.light select:focus,
+    .gate-panel input:focus {
+      border-color: var(--coral);
+      box-shadow: 0 0 0 3px rgba(255, 90, 61, 0.16);
     }
 
     .button {
+      position: relative;
+      isolation: isolate;
       display: inline-flex;
       align-items: center;
       justify-content: center;
       min-height: 44px;
       padding: 0 16px;
-      border: 0.5px solid var(--border);
-      border-radius: 0;
-      background: transparent;
+      border: 1px solid var(--border-strong);
+      border-radius: 4px;
+      overflow: hidden;
+      background: rgba(255, 248, 232, 0.03);
       color: var(--text-primary);
-      font-size: 12px;
+      font-family: var(--mono);
+      font-size: 10px;
       font-weight: 700;
-      letter-spacing: 0;
       line-height: 1;
       text-transform: uppercase;
+      white-space: nowrap;
+      transition: border-color 180ms var(--ease), color 180ms var(--ease), transform 180ms var(--ease);
+    }
+
+    .button:hover,
+    .button:focus-visible {
+      border-color: var(--accent);
+      color: var(--accent);
+      outline: 0;
+      transform: translateY(-1px);
     }
 
     .button.primary {
@@ -239,25 +435,53 @@
       color: var(--accent-text);
     }
 
-    .button.danger {
-      border-color: rgba(255, 114, 94, 0.45);
-      color: #FF725E;
+    .button.primary:hover,
+    .button.primary:focus-visible {
+      border-color: var(--text-primary);
+      background: var(--text-primary);
+      color: var(--ink);
     }
 
-    .button.ghost {
-      color: var(--text-muted);
+    .button.dark {
+      border-color: var(--ink);
+      background: var(--ink);
+      color: var(--text-primary);
+    }
+
+    .button.dark:hover,
+    .button.dark:focus-visible {
+      background: var(--coral);
+      color: var(--ink);
+    }
+
+    .button.danger {
+      border-color: rgba(255, 90, 61, 0.58);
+      color: var(--coral);
+    }
+
+    .button.danger:hover,
+    .button.danger:focus-visible {
+      background: var(--coral);
+      color: var(--ink);
     }
 
     .message {
       min-height: 22px;
       margin: 14px 0 0;
       color: var(--accent);
-      font-size: 12px;
+      font-family: var(--mono);
+      font-size: 11px;
       font-weight: 700;
+      text-transform: uppercase;
+    }
+
+    .panel.light .message,
+    .gate-panel .message {
+      color: #005b6b;
     }
 
     .message.error {
-      color: #FF725E;
+      color: var(--coral);
     }
 
     .table-wrap {
@@ -267,14 +491,14 @@
 
     table {
       width: 100%;
+      min-width: 760px;
       border-collapse: collapse;
-      min-width: 720px;
     }
 
     th,
     td {
       padding: 14px 16px;
-      border-bottom: 0.5px solid var(--border);
+      border-bottom: 1px solid var(--border);
       text-align: left;
       vertical-align: top;
     }
@@ -289,17 +513,49 @@
       font-size: 13px;
     }
 
-    td.muted {
-      color: var(--text-muted);
-    }
-
+    td.muted,
     .empty-row {
       color: var(--text-muted);
-      text-align: center;
     }
 
-    .gate-actions,
-    .form-actions {
+    .section-stack {
+      display: grid;
+      gap: 24px;
+      margin-top: 24px;
+    }
+
+    .actions-editor {
+      display: grid;
+      gap: 14px;
+    }
+
+    .action-editor {
+      display: grid;
+      gap: 14px;
+      padding: 18px;
+      border: 1px solid rgba(8, 8, 6, 0.16);
+      border-radius: 8px;
+      background: rgba(8, 8, 6, 0.045);
+    }
+
+    .action-editor-head {
+      display: flex;
+      justify-content: space-between;
+      gap: 14px;
+      align-items: center;
+    }
+
+    .action-editor-number {
+      color: var(--coral);
+      font-family: var(--display);
+      font-size: 42px;
+      font-style: italic;
+      font-weight: 900;
+      line-height: 0.8;
+    }
+
+    .form-actions,
+    .gate-actions {
       display: flex;
       flex-wrap: wrap;
       gap: 10px;
@@ -307,53 +563,60 @@
       margin-top: 18px;
     }
 
-    @media (max-width: 920px) {
-      .summary,
-      .grid {
+    @media (max-width: 980px) {
+      .hero-admin,
+      .dashboard-grid {
         grid-template-columns: 1fr;
       }
 
-      .summary-item + .summary-item {
-        border-left: 0;
-        border-top: 0.5px solid var(--border);
+      .summary {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
       }
     }
 
     @media (max-width: 700px) {
-      .topbar,
-      .admin-wrap {
-        padding-left: 22px;
-        padding-right: 22px;
-      }
-
       .topbar {
-        align-items: flex-start;
-        flex-direction: column;
+        grid-template-columns: 1fr;
       }
 
-      .button {
+      .top-actions {
+        justify-content: stretch;
+      }
+
+      .button,
+      .top-actions .button {
         width: 100%;
+      }
+
+      .summary,
+      .field-row {
+        grid-template-columns: 1fr;
+      }
+
+      .panel-head,
+      .action-editor-head {
+        display: grid;
       }
     }
   </style>
 </head>
 <body>
-  <div id="loading-message" style="display: none; position: fixed; top: 0; left: 0; right: 0; background: var(--accent); color: var(--accent-text); padding: 12px; text-align: center; font-weight: 600; z-index: 9999;">
-    ⏳ Server is waking up... Please wait a few seconds and refresh.
+  <div id="loading-message" class="loading-message">
+    Server wordt wakker. Wacht een paar seconden en vernieuw de pagina.
   </div>
-  
+
   <section class="gate" id="gate" aria-labelledby="gate-title">
     <form class="gate-panel" id="password-form">
-      <p class="kicker">( Admin )</p>
-      <h1 id="gate-title">Donaties beheren</h1>
-      <p class="muted">Afgeschermd met een lokale wachtwoordcheck.</p>
+      <p class="kicker">Admin toegang</p>
+      <h1 id="gate-title">Campagne beheren</h1>
+      <p class="muted">Log in om donaties, instellingen en lopende acties bij te werken.</p>
       <div class="field">
         <label for="password">Wachtwoord</label>
         <input id="password" type="password" autocomplete="current-password" required>
       </div>
       <div class="gate-actions">
-        <button class="button primary" type="submit">Open paneel</button>
-        <a class="button ghost" href="index.html">Terug naar site</a>
+        <button class="button dark" type="submit">Open paneel</button>
+        <a class="button dark" href="index.html">Terug naar site</a>
       </div>
       <p class="message error" id="gate-message" aria-live="polite"></p>
     </form>
@@ -361,39 +624,51 @@
 
   <div class="app" id="app">
     <header class="topbar">
-      <a class="brand" href="index.html">Guido de Br&egrave;s &times; Noah's Ark</a>
-      <button class="button ghost" type="button" id="refresh-button">Vernieuwen</button>
+      <a class="brand" href="index.html">
+        Guido de Br&egrave;s
+        <span>x Noah's Ark admin</span>
+      </a>
+      <div class="top-actions">
+        <button class="button" type="button" id="refresh-button">Vernieuwen</button>
+        <button class="button danger" type="button" id="logout-button">Uitloggen</button>
+      </div>
     </header>
 
     <main class="admin-wrap">
-      <p class="kicker">( Donatiepaneel )</p>
-      <h1>Fundraiser administratie</h1>
-      <p class="muted">Handmatige invoer voor Tikkie, IBAN en losse giften.</p>
+      <section class="hero-admin">
+        <div>
+          <p class="kicker">Donatiepaneel</p>
+          <h1>Fundraiser <em>control</em></h1>
+        </div>
+        <p class="hero-note">Handmatige invoer voor giften, campagnegegevens en de acties die op de publieke site verschijnen.</p>
+      </section>
 
       <section class="summary" aria-label="Samenvatting">
-        <div class="summary-item">
-          <span>Totaal opgehaald</span>
+        <div class="summary-item acid">
+          <span class="micro-label">Totaal opgehaald</span>
           <strong id="summary-total">&euro; 0</strong>
         </div>
         <div class="summary-item">
-          <span>Doel</span>
+          <span class="micro-label">Doel</span>
           <strong id="summary-goal">&euro; 10.000</strong>
         </div>
         <div class="summary-item">
-          <span>Donateurs</span>
+          <span class="micro-label">Donateurs</span>
           <strong id="summary-donors">0</strong>
         </div>
         <div class="summary-item">
-          <span>Nog nodig</span>
+          <span class="micro-label">Nog nodig</span>
           <strong id="summary-needed">&euro; 10.000</strong>
         </div>
       </section>
 
-      <div class="grid">
-        <section class="panel" aria-labelledby="add-heading">
+      <div class="dashboard-grid">
+        <section class="panel light" aria-labelledby="add-heading">
           <div class="panel-head">
-            <p class="kicker">( Nieuw )</p>
-            <h2 id="add-heading">Donatie toevoegen</h2>
+            <div>
+              <p class="kicker">Nieuw</p>
+              <h2 id="add-heading">Donatie toevoegen</h2>
+            </div>
           </div>
           <div class="panel-body">
             <form id="donation-form" class="form-grid">
@@ -410,7 +685,7 @@
                 <input id="note" name="note" type="text">
               </div>
               <div class="form-actions">
-                <button class="button primary" type="submit">Toevoegen</button>
+                <button class="button dark" type="submit">Toevoegen</button>
               </div>
             </form>
             <p class="message" id="form-message" aria-live="polite"></p>
@@ -419,8 +694,10 @@
 
         <section class="panel" aria-labelledby="log-heading">
           <div class="panel-head">
-            <p class="kicker">( Logboek )</p>
-            <h2 id="log-heading">Alle donaties</h2>
+            <div>
+              <p class="kicker">Logboek</p>
+              <h2 id="log-heading">Alle donaties</h2>
+            </div>
           </div>
           <div class="table-wrap">
             <table>
@@ -443,36 +720,63 @@
         </section>
       </div>
 
-      <section class="panel" aria-labelledby="settings-heading" style="margin-top: 32px;">
-        <div class="panel-head">
-          <p class="kicker">( Instellingen )</p>
-          <h2 id="settings-heading">Campagneparameters</h2>
-        </div>
-        <div class="panel-body">
-          <form id="settings-form" class="form-grid">
-            <div class="field">
-              <label for="goal">Doel (EUR)</label>
-              <input id="goal" name="goal" type="number" min="1" step="1" required>
+      <div class="section-stack">
+        <section class="panel light" aria-labelledby="settings-heading">
+          <div class="panel-head">
+            <div>
+              <p class="kicker">Instellingen</p>
+              <h2 id="settings-heading">Campagneparameters</h2>
             </div>
-            <div class="field">
-              <label for="iban">IBAN</label>
-              <input id="iban" name="iban" type="text" required>
+          </div>
+          <div class="panel-body">
+            <form id="settings-form" class="form-grid">
+              <div class="field-row">
+                <div class="field">
+                  <label for="goal">Doel (EUR)</label>
+                  <input id="goal" name="goal" type="number" min="1" step="1" required>
+                </div>
+                <div class="field">
+                  <label for="tikkie_url">Tikkie URL</label>
+                  <input id="tikkie_url" name="tikkie_url" type="url" required>
+                </div>
+              </div>
+              <div class="field-row">
+                <div class="field">
+                  <label for="iban">IBAN</label>
+                  <input id="iban" name="iban" type="text" required>
+                </div>
+                <div class="field">
+                  <label for="iban_name">Rekeninghouder</label>
+                  <input id="iban_name" name="iban_name" type="text" required>
+                </div>
+              </div>
+              <div class="form-actions">
+                <button class="button dark" type="submit">Instellingen opslaan</button>
+              </div>
+            </form>
+            <p class="message" id="settings-message" aria-live="polite"></p>
+          </div>
+        </section>
+
+        <section class="panel light" aria-labelledby="actions-admin-heading">
+          <div class="panel-head">
+            <div>
+              <p class="kicker">Publieke site</p>
+              <h2 id="actions-admin-heading">Lopende acties</h2>
             </div>
-            <div class="field">
-              <label for="iban_name">Rekeninghouder</label>
-              <input id="iban_name" name="iban_name" type="text" required>
-            </div>
-            <div class="field">
-              <label for="tikkie_url">Tikkie URL</label>
-              <input id="tikkie_url" name="tikkie_url" type="url" required>
-            </div>
-            <div class="form-actions">
-              <button class="button primary" type="submit">Instellingen opslaan</button>
-            </div>
-          </form>
-          <p class="message" id="settings-message" aria-live="polite"></p>
-        </div>
-      </section>
+            <button class="button dark" type="button" id="add-action-button">Actie toevoegen</button>
+          </div>
+          <div class="panel-body">
+            <form id="actions-form" class="form-grid">
+              <div class="actions-editor" id="actions-editor"></div>
+              <div class="form-actions">
+                <button class="button dark" type="submit">Acties opslaan</button>
+              </div>
+            </form>
+            <p class="message" id="actions-message" aria-live="polite"></p>
+          </div>
+        </section>
+      </div>
     </main>
   </div>
 
@@ -482,9 +786,10 @@
       "use strict";
 
       var config = window.NAF_CONFIG || {};
+      var localSettingsKey = "naf_local_settings";
+      var localPreview = window.location.protocol === "file:";
+      config = Object.assign({}, config, loadLocalSettings());
       var goal = Number(config.GOAL_EUR || 10000);
-      var supabaseUrl = cleanUrl(config.SUPABASE_URL || "");
-      var serviceKey = config.SUPABASE_SERVICE_KEY || "";
       var adminApiUrl = cleanUrl(config.ADMIN_API_URL || "");
       var currencyFormat = new Intl.NumberFormat("nl-NL", {
         style: "currency",
@@ -496,13 +801,26 @@
       var app = document.getElementById("app");
       var gateMessage = document.getElementById("gate-message");
       var formMessage = document.getElementById("form-message");
+      var settingsMessage = document.getElementById("settings-message");
+      var actionsMessage = document.getElementById("actions-message");
       var donationsBody = document.getElementById("donations-body");
+      var actionsEditor = document.getElementById("actions-editor");
+      var settingsState = {
+        GOAL_EUR: goal,
+        IBAN: config.IBAN || "",
+        IBAN_NAME: config.IBAN_NAME || "",
+        TIKKIE_URL: config.TIKKIE_URL || "",
+        ACTIONS: normalizeActions(config.ACTIONS)
+      };
 
       document.getElementById("summary-goal").textContent = currencyFormat.format(goal);
       document.getElementById("password-form").addEventListener("submit", handlePassword);
       document.getElementById("donation-form").addEventListener("submit", handleInsert);
-      document.getElementById("refresh-button").addEventListener("click", loadAdminData);
       document.getElementById("settings-form").addEventListener("submit", handleSettingsSave);
+      document.getElementById("actions-form").addEventListener("submit", handleActionsSave);
+      document.getElementById("add-action-button").addEventListener("click", addAction);
+      document.getElementById("refresh-button").addEventListener("click", refreshAll);
+      document.getElementById("logout-button").addEventListener("click", handleLogout);
 
       if (window.sessionStorage.getItem("naf_admin_unlocked") === "true") {
         unlock();
@@ -512,136 +830,154 @@
         return String(url || "").replace(/\/+$/, "");
       }
 
-      function useBackendApi() {
-        return Boolean(adminApiUrl) || (window.location.protocol !== "file:" && !serviceKey);
-      }
-
       function apiPath(path) {
         return (adminApiUrl || "") + path;
-      }
-
-      function hasDirectSupabaseConfig() {
-        return Boolean(supabaseUrl && serviceKey);
-      }
-
-      function hasSupabaseConfig() {
-        return useBackendApi() || hasDirectSupabaseConfig();
-      }
-
-      function serviceHeaders() {
-        return {
-          apikey: serviceKey,
-          Authorization: "Bearer " + serviceKey,
-          "Content-Type": "application/json",
-          Prefer: "return=representation"
-        };
       }
 
       async function handlePassword(event) {
         event.preventDefault();
         gateMessage.textContent = "";
-        var password = document.getElementById("password").value;
-        var expectedHash = String(config.ADMIN_PASSWORD_HASH || "").trim().toLowerCase();
 
-        if (useBackendApi()) {
-          try {
-            var loginResponse = await fetch(apiPath("/api/login"), {
-              method: "POST",
-              credentials: "include",
-              headers: { "Content-Type": "application/json" },
-              body: JSON.stringify({ password: password })
-            });
-
-            if (!loginResponse.ok) {
-              throw await httpError(loginResponse, "Wachtwoord klopt niet.");
-            }
-
-            window.sessionStorage.setItem("naf_admin_unlocked", "true");
-            unlock();
-            return;
-          } catch (error) {
-            gateMessage.textContent = error.message || "Kon de Python admin API niet bereiken.";
-            return;
-          }
-        }
-
-        if (!expectedHash) {
-          gateMessage.textContent = "Vul ADMIN_PASSWORD_HASH in config.js in.";
+        if (localPreview) {
+          window.sessionStorage.setItem("naf_admin_unlocked", "true");
+          unlock();
           return;
         }
 
-        var actualHash = await sha256(password);
-        if (actualHash === expectedHash) {
+        try {
+          var response = await fetch(apiPath("/api/login"), {
+            method: "POST",
+            credentials: "include",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ password: document.getElementById("password").value })
+          });
+
+          if (!response.ok) {
+            throw await httpError(response, "Wachtwoord klopt niet.");
+          }
+
           window.sessionStorage.setItem("naf_admin_unlocked", "true");
           unlock();
-        } else {
-          gateMessage.textContent = "Wachtwoord klopt niet.";
+        } catch (error) {
+          gateMessage.textContent = error.message || "Kon de Python admin API niet bereiken.";
         }
       }
 
       function unlock() {
         gate.style.display = "none";
         app.classList.add("is-visible");
-        loadSettingsForm();
-        loadAdminData();
+        refreshAll();
       }
 
-      async function sha256(text) {
-        var bytes = new TextEncoder().encode(text);
-        var buffer = await crypto.subtle.digest("SHA-256", bytes);
-        return Array.from(new Uint8Array(buffer)).map(function (byte) {
-          return byte.toString(16).padStart(2, "0");
-        }).join("");
+      async function refreshAll() {
+        if (localPreview) {
+          loadSettingsForm();
+          loadAdminData();
+          return;
+        }
+        await Promise.all([loadSettingsForm(), loadAdminData()]);
+      }
+
+      async function handleLogout() {
+        if (localPreview) {
+          window.sessionStorage.removeItem("naf_admin_unlocked");
+          app.classList.remove("is-visible");
+          gate.style.display = "grid";
+          return;
+        }
+
+        try {
+          await fetch(apiPath("/api/logout"), {
+            method: "POST",
+            credentials: "include"
+          });
+        } catch (error) {
+          console.error(error);
+        }
+        window.sessionStorage.removeItem("naf_admin_unlocked");
+        app.classList.remove("is-visible");
+        gate.style.display = "grid";
+      }
+
+      async function loadSettingsForm() {
+        if (localPreview) {
+          settingsState = {
+            GOAL_EUR: Number(config.GOAL_EUR || 10000),
+            IBAN: config.IBAN || "",
+            IBAN_NAME: config.IBAN_NAME || "",
+            TIKKIE_URL: config.TIKKIE_URL || "",
+            ACTIONS: normalizeActions(config.ACTIONS)
+          };
+          goal = settingsState.GOAL_EUR;
+          document.getElementById("summary-goal").textContent = currencyFormat.format(goal);
+          document.getElementById("goal").value = settingsState.GOAL_EUR;
+          document.getElementById("iban").value = settingsState.IBAN;
+          document.getElementById("iban_name").value = settingsState.IBAN_NAME;
+          document.getElementById("tikkie_url").value = settingsState.TIKKIE_URL;
+          renderActionsEditor(settingsState.ACTIONS);
+          settingsMessage.className = "message";
+          settingsMessage.textContent = "Lokale previewmodus: wijzigingen gelden in deze browser.";
+          return;
+        }
+
+        try {
+          var response = await fetch(apiPath("/api/settings"), {
+            credentials: "include"
+          });
+          if (!response.ok) {
+            throw await httpError(response, "Kon instellingen niet laden.");
+          }
+
+          var body = await response.json();
+          settingsState = {
+            GOAL_EUR: Number(body.GOAL_EUR || 10000),
+            IBAN: body.IBAN || "",
+            IBAN_NAME: body.IBAN_NAME || "",
+            TIKKIE_URL: body.TIKKIE_URL || "",
+            ACTIONS: normalizeActions(body.ACTIONS)
+          };
+          goal = settingsState.GOAL_EUR;
+          document.getElementById("summary-goal").textContent = currencyFormat.format(goal);
+          document.getElementById("goal").value = settingsState.GOAL_EUR;
+          document.getElementById("iban").value = settingsState.IBAN;
+          document.getElementById("iban_name").value = settingsState.IBAN_NAME;
+          document.getElementById("tikkie_url").value = settingsState.TIKKIE_URL;
+          renderActionsEditor(settingsState.ACTIONS);
+        } catch (error) {
+          handleAuthError(error);
+          settingsMessage.className = "message error";
+          settingsMessage.textContent = error.message || "Kon instellingen niet laden.";
+        }
       }
 
       async function loadAdminData() {
-        if (!hasSupabaseConfig()) {
-          formMessage.className = "message error";
-          formMessage.textContent = "Start app.py en vul SUPABASE_SERVICE_KEY in .env in.";
+        if (localPreview) {
           renderRows([]);
           renderSummary([]);
+          formMessage.className = "message";
+          formMessage.textContent = "Lokale previewmodus: donaties lopen via de Flask/Supabase admin.";
           return;
         }
 
         try {
           formMessage.className = "message";
           formMessage.textContent = "Laden...";
-          var rows = await fetchDonations();
+          var response = await fetch(apiPath("/api/donations"), {
+            credentials: "include"
+          });
+          if (!response.ok) {
+            throw await httpError(response, "Kon donaties niet laden.");
+          }
+          var body = await response.json();
+          var rows = body.donations || [];
           renderRows(rows);
           renderSummary(rows);
           formMessage.textContent = "";
         } catch (error) {
-          if (error.status === 401) {
-            window.sessionStorage.removeItem("naf_admin_unlocked");
-            app.classList.remove("is-visible");
-            gate.style.display = "grid";
-            gateMessage.textContent = "Log opnieuw in.";
-          }
+          handleAuthError(error);
           formMessage.className = "message error";
           formMessage.textContent = error.message || "Kon donaties niet laden.";
-          console.error(error);
         }
-      }
-
-      async function fetchDonations() {
-        if (useBackendApi()) {
-          var apiResponse = await fetch(apiPath("/api/donations"), {
-            credentials: "include"
-          });
-          if (!apiResponse.ok) {
-            throw await httpError(apiResponse, "Kon donaties niet laden.");
-          }
-          var body = await apiResponse.json();
-          return body.donations || [];
-        }
-
-        var response = await fetch(supabaseUrl + "/rest/v1/donations?select=id,amount,donor_name,note,created_at&order=created_at.desc", {
-          headers: serviceHeaders()
-        });
-        if (!response.ok) {
-          throw new Error("Fetch donations failed");
-        }
-        return response.json();
       }
 
       function renderSummary(rows) {
@@ -653,6 +989,7 @@
         document.getElementById("summary-total").textContent = currencyFormat.format(total);
         document.getElementById("summary-donors").textContent = numberFormat.format(rows.length);
         document.getElementById("summary-needed").textContent = currencyFormat.format(needed);
+        document.getElementById("summary-goal").textContent = currencyFormat.format(goal);
       }
 
       function renderRows(rows) {
@@ -714,60 +1051,44 @@
         formMessage.className = "message";
         formMessage.textContent = "";
 
-        if (!hasSupabaseConfig()) {
+        if (localPreview) {
           formMessage.className = "message error";
-          formMessage.textContent = "Supabase config ontbreekt.";
+          formMessage.textContent = "Start app.py om donaties lokaal te beheren.";
           return;
         }
 
         var form = event.currentTarget;
         var amount = Number(form.amount.value);
-        var donorName = form.donor_name.value.trim();
-        var note = form.note.value.trim();
-
         if (!amount || amount < 1) {
           formMessage.className = "message error";
           formMessage.textContent = "Vul een geldig bedrag in.";
           return;
         }
 
-        var payload = {
-          amount: amount,
-          donor_name: donorName || null,
-          note: note || null
-        };
-
         try {
           form.querySelector("button[type='submit']").disabled = true;
-          var response;
-
-          if (useBackendApi()) {
-            response = await fetch(apiPath("/api/donations"), {
-              method: "POST",
-              credentials: "include",
-              headers: { "Content-Type": "application/json" },
-              body: JSON.stringify(payload)
-            });
-          } else {
-            response = await fetch(supabaseUrl + "/rest/v1/donations", {
-              method: "POST",
-              headers: serviceHeaders(),
-              body: JSON.stringify(payload)
-            });
-          }
+          var response = await fetch(apiPath("/api/donations"), {
+            method: "POST",
+            credentials: "include",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              amount: amount,
+              donor_name: form.donor_name.value.trim() || null,
+              note: form.note.value.trim() || null
+            })
+          });
 
           if (!response.ok) {
             throw await httpError(response, "Toevoegen is mislukt.");
           }
 
           form.reset();
-          formMessage.className = "message";
           formMessage.textContent = "Donatie toegevoegd.";
           await loadAdminData();
         } catch (error) {
+          handleAuthError(error);
           formMessage.className = "message error";
-          formMessage.textContent = "Toevoegen is mislukt.";
-          console.error(error);
+          formMessage.textContent = error.message || "Toevoegen is mislukt.";
         } finally {
           form.querySelector("button[type='submit']").disabled = false;
         }
@@ -779,80 +1100,251 @@
         }
 
         try {
-          var response;
-
-          if (useBackendApi()) {
-            response = await fetch(apiPath("/api/donations/" + encodeURIComponent(id)), {
-              method: "DELETE",
-              credentials: "include"
-            });
-          } else {
-            response = await fetch(supabaseUrl + "/rest/v1/donations?id=eq." + encodeURIComponent(id), {
-              method: "DELETE",
-              headers: serviceHeaders()
-            });
-          }
-
+          var response = await fetch(apiPath("/api/donations/" + encodeURIComponent(id)), {
+            method: "DELETE",
+            credentials: "include"
+          });
           if (!response.ok) {
             throw await httpError(response, "Verwijderen is mislukt.");
           }
-
-          formMessage.className = "message";
           formMessage.textContent = "Donatie verwijderd.";
           await loadAdminData();
         } catch (error) {
+          handleAuthError(error);
           formMessage.className = "message error";
-          formMessage.textContent = "Verwijderen is mislukt.";
-          console.error(error);
-        }
-      }
-
-      async function loadSettingsForm() {
-        try {
-          document.getElementById("goal").value = config.GOAL_EUR || 10000;
-          document.getElementById("iban").value = config.IBAN || "";
-          document.getElementById("iban_name").value = config.IBAN_NAME || "";
-          document.getElementById("tikkie_url").value = config.TIKKIE_URL || "";
-        } catch (error) {
-          console.error("Error loading settings:", error);
+          formMessage.textContent = error.message || "Verwijderen is mislukt.";
         }
       }
 
       async function handleSettingsSave(event) {
         event.preventDefault();
-        var settingsMessage = document.getElementById("settings-message");
         settingsMessage.className = "message";
         settingsMessage.textContent = "Opslaan...";
-
-        var form = event.currentTarget;
-        var payload = {
-          GOAL_EUR: Number(form.goal.value),
-          IBAN: form.iban.value.trim(),
-          IBAN_NAME: form.iban_name.value.trim(),
-          TIKKIE_URL: form.tikkie_url.value.trim()
-        };
+        syncSettingsStateFromForms();
 
         try {
-          var response = await fetch(apiPath("/api/settings"), {
-            method: "POST",
-            credentials: "include",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify(payload)
-          });
-
-          if (!response.ok) {
-            throw await httpError(response, "Opslaan is mislukt.");
-          }
-
-          settingsMessage.className = "message";
-          settingsMessage.textContent = "Instellingen opgeslagen. Pagina wordt ververst...";
-          setTimeout(function() {
-            window.location.reload();
-          }, 1500);
+          await saveSettings(settingsState);
+          goal = settingsState.GOAL_EUR;
+          document.getElementById("summary-goal").textContent = currencyFormat.format(goal);
+          settingsMessage.textContent = "Instellingen opgeslagen.";
+          await loadAdminData();
         } catch (error) {
+          handleAuthError(error);
           settingsMessage.className = "message error";
           settingsMessage.textContent = error.message || "Opslaan is mislukt.";
-          console.error(error);
+        }
+      }
+
+      function renderActionsEditor(actions) {
+        actionsEditor.innerHTML = "";
+        normalizeActions(actions).forEach(function (action, index) {
+          actionsEditor.appendChild(createActionEditor(action, index));
+        });
+      }
+
+      function createActionEditor(action, index) {
+        var wrapper = document.createElement("div");
+        wrapper.className = "action-editor";
+        wrapper.dataset.index = String(index);
+
+        wrapper.innerHTML =
+          '<div class="action-editor-head">' +
+            '<span class="action-editor-number">' + String(index + 1).padStart(2, "0") + '</span>' +
+            '<button class="button danger" type="button" data-remove-action>Verwijder actie</button>' +
+          '</div>' +
+          '<div class="field-row">' +
+            '<div class="field">' +
+              '<label>Titel</label>' +
+              '<input name="action_title" type="text" required>' +
+            '</div>' +
+            '<div class="field">' +
+              '<label>Tags (komma gescheiden)</label>' +
+              '<input name="action_tags" type="text">' +
+            '</div>' +
+          '</div>' +
+          '<div class="field">' +
+            '<label>Beschrijving</label>' +
+            '<textarea name="action_description" required></textarea>' +
+          '</div>' +
+          '<div class="field-row">' +
+            '<div class="field">' +
+              '<label>Status label</label>' +
+              '<input name="action_status_label" type="text">' +
+            '</div>' +
+            '<div class="field">' +
+              '<label>Status waarde</label>' +
+              '<input name="action_status" type="text">' +
+            '</div>' +
+          '</div>' +
+          '<div class="field">' +
+            '<label>Visuele stijl</label>' +
+            '<select name="action_variant">' +
+              '<option value="">Donker</option>' +
+              '<option value="featured">Groen groot</option>' +
+              '<option value="coral">Koraal groot</option>' +
+            '</select>' +
+          '</div>';
+
+        wrapper.querySelector("[name='action_title']").value = action.title || "";
+        wrapper.querySelector("[name='action_tags']").value = (action.tags || []).join(", ");
+        wrapper.querySelector("[name='action_description']").value = action.description || "";
+        wrapper.querySelector("[name='action_status_label']").value = action.status_label || "Status";
+        wrapper.querySelector("[name='action_status']").value = action.status || "Open";
+        wrapper.querySelector("[name='action_variant']").value = action.variant || "";
+        wrapper.querySelector("[data-remove-action]").addEventListener("click", function () {
+          wrapper.remove();
+          renumberActionEditors();
+        });
+
+        return wrapper;
+      }
+
+      function addAction() {
+        actionsEditor.appendChild(createActionEditor({
+          title: "Nieuwe actie",
+          description: "",
+          status_label: "Status",
+          status: "Open",
+          tags: ["Nieuw"],
+          variant: ""
+        }, actionsEditor.children.length));
+        renumberActionEditors();
+      }
+
+      function renumberActionEditors() {
+        Array.prototype.slice.call(actionsEditor.children).forEach(function (editor, index) {
+          editor.dataset.index = String(index);
+          editor.querySelector(".action-editor-number").textContent = String(index + 1).padStart(2, "0");
+        });
+      }
+
+      function collectActions() {
+        return Array.prototype.slice.call(actionsEditor.children).map(function (editor) {
+          return {
+            title: editor.querySelector("[name='action_title']").value.trim(),
+            description: editor.querySelector("[name='action_description']").value.trim(),
+            status_label: editor.querySelector("[name='action_status_label']").value.trim() || "Status",
+            status: editor.querySelector("[name='action_status']").value.trim() || "Open",
+            tags: editor.querySelector("[name='action_tags']").value.split(",").map(function (tag) {
+              return tag.trim();
+            }).filter(Boolean),
+            variant: editor.querySelector("[name='action_variant']").value
+          };
+        }).filter(function (action) {
+          return action.title || action.description;
+        });
+      }
+
+      async function handleActionsSave(event) {
+        event.preventDefault();
+        actionsMessage.className = "message";
+        actionsMessage.textContent = "Acties opslaan...";
+        syncSettingsStateFromForms();
+
+        try {
+          await saveSettings(settingsState);
+          renderActionsEditor(settingsState.ACTIONS);
+          actionsMessage.textContent = "Acties opgeslagen. De publieke site gebruikt deze lijst nu.";
+        } catch (error) {
+          handleAuthError(error);
+          actionsMessage.className = "message error";
+          actionsMessage.textContent = error.message || "Acties opslaan is mislukt.";
+        }
+      }
+
+      async function saveSettings(nextSettings) {
+        saveLocalSettings(nextSettings);
+        if (localPreview) {
+          config = Object.assign({}, config, loadLocalSettings());
+          return;
+        }
+
+        var response = await fetch(apiPath("/api/settings"), {
+          method: "POST",
+          credentials: "include",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            GOAL_EUR: Number(nextSettings.GOAL_EUR || 10000),
+            IBAN: nextSettings.IBAN || "",
+            IBAN_NAME: nextSettings.IBAN_NAME || "",
+            TIKKIE_URL: nextSettings.TIKKIE_URL || "",
+            ACTIONS: normalizeActions(nextSettings.ACTIONS)
+          })
+        });
+
+        if (!response.ok) {
+          throw await httpError(response, "Opslaan is mislukt.");
+        }
+      }
+
+      function loadLocalSettings() {
+        try {
+          return JSON.parse(window.localStorage.getItem(localSettingsKey) || "{}") || {};
+        } catch (error) {
+          return {};
+        }
+      }
+
+      function saveLocalSettings(nextSettings) {
+        try {
+          window.localStorage.setItem(localSettingsKey, JSON.stringify({
+            GOAL_EUR: Number(nextSettings.GOAL_EUR || 10000),
+            IBAN: nextSettings.IBAN || "",
+            IBAN_NAME: nextSettings.IBAN_NAME || "",
+            TIKKIE_URL: nextSettings.TIKKIE_URL || "",
+            ACTIONS: normalizeActions(nextSettings.ACTIONS)
+          }));
+        } catch (error) {
+          console.error("Local preview save failed", error);
+        }
+      }
+
+      function syncSettingsStateFromForms() {
+        settingsState.GOAL_EUR = Number(document.getElementById("goal").value || 10000);
+        settingsState.IBAN = document.getElementById("iban").value.trim();
+        settingsState.IBAN_NAME = document.getElementById("iban_name").value.trim();
+        settingsState.TIKKIE_URL = document.getElementById("tikkie_url").value.trim();
+        settingsState.ACTIONS = normalizeActions(collectActions());
+      }
+
+      function normalizeActions(value) {
+        var fallback = [{
+          title: "Sponsorloop",
+          description: "Leerlingen laten zich sponsoren per ronde en verzamelen zo direct donaties voor de reis en het project.",
+          status_label: "Status",
+          status: "Actief",
+          tags: ["Loopt nu", "Schoolactie"],
+          variant: "featured"
+        }];
+
+        if (!Array.isArray(value)) {
+          return fallback;
+        }
+
+        var actions = value.map(function (action) {
+          return {
+            title: String(action.title || "").trim() || "Nieuwe actie",
+            description: String(action.description || "").trim(),
+            status_label: String(action.status_label || "Status").trim() || "Status",
+            status: String(action.status || "Open").trim() || "Open",
+            tags: Array.isArray(action.tags) ? action.tags.map(String).map(function (tag) {
+              return tag.trim();
+            }).filter(Boolean).slice(0, 4) : [],
+            variant: action.variant === "featured" || action.variant === "coral" ? action.variant : ""
+          };
+        }).filter(function (action) {
+          return action.title || action.description;
+        });
+
+        return actions.length ? actions : fallback;
+      }
+
+      function handleAuthError(error) {
+        if (error && error.status === 401) {
+          window.sessionStorage.removeItem("naf_admin_unlocked");
+          app.classList.remove("is-visible");
+          gate.style.display = "grid";
+          gateMessage.textContent = "Log opnieuw in.";
         }
       }
 
@@ -873,47 +1365,37 @@
   </script>
 
   <script>
-    // Check server health on load and periodically
     (function() {
-      const loadingMessage = document.getElementById('loading-message');
-      let lastCheck = 0;
+      const loadingMessage = document.getElementById("loading-message");
 
       async function checkHealth() {
         try {
-          const response = await fetch('/api/health', { method: 'GET', cache: 'no-store' });
+          const response = await fetch("/api/health", { method: "GET", cache: "no-store" });
           if (response.ok) {
-            loadingMessage.style.display = 'none';
+            loadingMessage.style.display = "none";
             return true;
           }
         } catch (error) {
-          // Server might be down
+          // Free hosting can sleep; the banner only appears after a fetch failure.
         }
         return false;
       }
 
-      // Check immediately
       checkHealth();
 
-      // If page doesn't load properly, show loading message and retry
-      window.addEventListener('error', function(event) {
-        if (event.message && event.message.includes('Failed to fetch')) {
-          loadingMessage.style.display = 'block';
+      window.addEventListener("error", function(event) {
+        if (event.message && event.message.includes("Failed to fetch")) {
+          loadingMessage.style.display = "block";
         }
       });
 
-      // Also check periodically and show message if server is unreachable
-      function periodicCheck() {
-        checkHealth().then(ok => {
-          if (!ok) {
-            loadingMessage.style.display = 'block';
-          }
-        });
-      }
-
-      // Check every 3 seconds if message is shown
       setInterval(function() {
-        if (loadingMessage.style.display === 'block') {
-          periodicCheck();
+        if (loadingMessage.style.display === "block") {
+          checkHealth().then(function(ok) {
+            if (!ok) {
+              loadingMessage.style.display = "block";
+            }
+          });
         }
       }, 3000);
     })();

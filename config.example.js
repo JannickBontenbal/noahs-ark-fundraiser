@@ -9,5 +9,25 @@ window.NAF_CONFIG = {
   TARGET_DATE: "2027-02-01",
   IBAN: "NL00 BANK 0000 0000 00",
   IBAN_NAME: "Stichting naam",
-  TIKKIE_URL: "https://tikkie.me/pay/example"
+  TIKKIE_URL: "https://tikkie.me/pay/example",
+  STRIPE_PUBLISHABLE_KEY: "pk_test_your_publishable_key",
+  STRIPE_ENABLED: false,
+  ACTIONS: [
+    {
+      title: "Sponsorloop",
+      description: "Leerlingen laten zich sponsoren per ronde en verzamelen zo direct donaties voor de reis en het project.",
+      status_label: "Status",
+      status: "Actief",
+      tags: ["Loopt nu", "Schoolactie"],
+      variant: "featured"
+    },
+    {
+      title: "Actiemarkt",
+      description: "Een middag met kleine verkoopacties, eten, drinken en creatieve manieren om geld op te halen.",
+      status_label: "Status",
+      status: "In voorbereiding",
+      tags: ["Binnenkort", "Samen"],
+      variant: "coral"
+    }
+  ]
 };

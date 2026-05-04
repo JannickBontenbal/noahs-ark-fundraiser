@@ -5,3 +5,4 @@ config.js
 .venv/
 __pycache__/
 password.txt
+settings.json
