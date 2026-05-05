@@ -7,7 +7,6 @@ from pathlib import Path
 
 from dotenv import load_dotenv
 from flask import Flask, Response, jsonify, request, send_from_directory, session
-from supabase import Client, create_client
 
 load_dotenv()
 
@@ -244,7 +243,9 @@ def stamp_action_metadata(previous_actions, incoming_actions, actor):
     return stamped, events
 
 
-def supabase_admin() -> Client:
+def supabase_admin():
+    from supabase import create_client
+
     key = SUPABASE_SERVICE_KEY or SUPABASE_KEY
     return create_client(SUPABASE_URL, key)
 
