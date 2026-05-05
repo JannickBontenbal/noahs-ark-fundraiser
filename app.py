@@ -2,6 +2,7 @@ import hashlib
 import io
 import json
 import os
+import uuid
 from pathlib import Path
 
 from dotenv import load_dotenv
@@ -119,15 +120,94 @@ def normalize_actions(value):
             variant = ""
 
         actions.append({
+            "id": str(item.get("id", "")).strip()[:80],
             "title": title or "Nieuwe actie",
             "description": description,
             "status_label": str(item.get("status_label", "Status")).strip() or "Status",
             "status": str(item.get("status", "")).strip() or "Open",
             "tags": [str(tag).strip() for tag in raw_tags if str(tag).strip()][:4],
             "variant": variant,
+            "created_by": clean_text(item.get("created_by"), 120),
+            "created_at": clean_text(item.get("created_at"), 80),
+            "updated_by": clean_text(item.get("updated_by"), 120),
+            "updated_at": clean_text(item.get("updated_at"), 80),
         })
 
     return actions or DEFAULT_ACTIONS
+
+
+def iso_now():
+    from datetime import datetime, timezone
+
+    return datetime.now(timezone.utc).isoformat()
+
+
+def action_signature(action):
+    return {
+        "title": action.get("title", ""),
+        "description": action.get("description", ""),
+        "status_label": action.get("status_label", ""),
+        "status": action.get("status", ""),
+        "tags": action.get("tags", []),
+        "variant": action.get("variant", ""),
+    }
+
+
+def stamp_action_metadata(previous_actions, incoming_actions, actor):
+    previous = normalize_actions(previous_actions)
+    incoming = normalize_actions(incoming_actions)
+    previous_by_id = {action.get("id"): action for action in previous if action.get("id")}
+    used_previous_ids = set()
+    used_previous_indexes = set()
+    timestamp = iso_now()
+    stamped = []
+    events = []
+
+    for index, action in enumerate(incoming):
+        previous_action = None
+        action_id = action.get("id")
+        if action_id and action_id in previous_by_id:
+            previous_action = previous_by_id[action_id]
+            used_previous_ids.add(action_id)
+        elif index < len(previous) and index not in used_previous_indexes:
+            previous_action = previous[index]
+            used_previous_indexes.add(index)
+
+        if previous_action:
+            action["id"] = previous_action.get("id") or action_id or str(uuid.uuid4())
+            action["created_by"] = previous_action.get("created_by") or actor
+            action["created_at"] = previous_action.get("created_at") or timestamp
+            if action_signature(action) != action_signature(previous_action):
+                action["updated_by"] = actor
+                action["updated_at"] = timestamp
+                events.append(("actie bewerkt", action.get("title", "Nieuwe actie")))
+            else:
+                action["updated_by"] = previous_action.get("updated_by") or previous_action.get("created_by") or actor
+                action["updated_at"] = previous_action.get("updated_at") or previous_action.get("created_at") or timestamp
+        else:
+            action["id"] = action_id or str(uuid.uuid4())
+            action["created_by"] = actor
+            action["created_at"] = timestamp
+            action["updated_by"] = actor
+            action["updated_at"] = timestamp
+            events.append(("actie toegevoegd", action.get("title", "Nieuwe actie")))
+
+        stamped.append(action)
+
+    incoming_ids = {action.get("id") for action in stamped if action.get("id")}
+    for previous_index, previous_action in enumerate(previous):
+        if previous_index in used_previous_indexes:
+            continue
+        previous_id = previous_action.get("id")
+        if previous_id and previous_id in incoming_ids:
+            continue
+        if previous_id and previous_id in used_previous_ids:
+            continue
+        title = previous_action.get("title", "Nieuwe actie")
+        if title and title not in [action.get("title") for action in stamped]:
+            events.append(("actie verwijderd", title))
+
+    return stamped, events
 
 
 def supabase_admin() -> Client:
@@ -315,12 +395,18 @@ def update_settings():
         "IBAN_NAME": settings.get("IBAN_NAME", os.environ.get("IBAN_NAME", "")),
         "ACTIONS": normalize_actions(settings.get("ACTIONS", DEFAULT_ACTIONS)),
     }
+    incoming_actions, action_events = stamp_action_metadata(
+        previous_settings["ACTIONS"],
+        payload.get("ACTIONS", settings.get("ACTIONS", DEFAULT_ACTIONS)),
+        current_admin_name(),
+    )
+
     settings.update({
         "GOAL_EUR": str(payload.get("GOAL_EUR", settings.get("GOAL_EUR", "10000"))),
         "IBAN": payload.get("IBAN", settings.get("IBAN", "")),
         "IBAN_NAME": payload.get("IBAN_NAME", settings.get("IBAN_NAME", "")),
         "TIKKIE_URL": payload.get("TIKKIE_URL", settings.get("TIKKIE_URL", "")),
-        "ACTIONS": normalize_actions(payload.get("ACTIONS", settings.get("ACTIONS", DEFAULT_ACTIONS))),
+        "ACTIONS": incoming_actions,
     })
     
     if save_settings(settings):
@@ -331,7 +417,7 @@ def update_settings():
             changed.append("IBAN")
         if previous_settings["IBAN_NAME"] != settings.get("IBAN_NAME", ""):
             changed.append("rekeninghouder")
-        if previous_settings["ACTIONS"] != settings.get("ACTIONS", []):
+        if previous_settings["ACTIONS"] != settings.get("ACTIONS", []) and not action_events:
             changed.append("lopende acties")
         if changed:
             log_admin_change(
@@ -339,7 +425,26 @@ def update_settings():
                 "settings",
                 details=current_admin_name() + " wijzigde " + ", ".join(changed) + ".",
             )
-        return jsonify({"ok": True})
+        for action, title in action_events:
+            verb = {
+                "actie toegevoegd": "voegde toe",
+                "actie bewerkt": "bewerkte",
+                "actie verwijderd": "verwijderde",
+            }.get(action, "wijzigde")
+            log_admin_change(
+                action,
+                "action",
+                details=current_admin_name() + " " + verb + " actie '" + title + "'.",
+            )
+        return jsonify({
+            "ok": True,
+            "settings": {
+                "GOAL_EUR": int(settings.get("GOAL_EUR", os.environ.get("GOAL_EUR", "10000"))),
+                "IBAN": settings.get("IBAN", os.environ.get("IBAN", "")),
+                "IBAN_NAME": settings.get("IBAN_NAME", os.environ.get("IBAN_NAME", "")),
+                "ACTIONS": normalize_actions(settings.get("ACTIONS", DEFAULT_ACTIONS)),
+            },
+        })
     else:
         return jsonify({"error": "Kon instellingen niet opslaan."}), 500
 

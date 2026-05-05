@@ -624,6 +624,13 @@
       align-items: center;
     }
 
+    .action-editor-identity {
+      display: flex;
+      gap: 12px;
+      align-items: center;
+      min-width: 0;
+    }
+
     .action-editor-number {
       color: var(--coral);
       font-family: var(--display);
@@ -631,6 +638,17 @@
       font-style: italic;
       font-weight: 900;
       line-height: 0.8;
+    }
+
+    .action-meta {
+      display: grid;
+      gap: 3px;
+      color: rgba(8, 8, 6, 0.62);
+      font-family: var(--mono);
+      font-size: 10px;
+      font-weight: 700;
+      line-height: 1.25;
+      text-transform: uppercase;
     }
 
     .form-actions,
@@ -954,6 +972,7 @@
         IBAN_NAME: config.IBAN_NAME || "",
         ACTIONS: normalizeActions(config.ACTIONS)
       };
+      var currentDonations = [];
 
       document.getElementById("summary-goal").textContent = currencyFormat.format(goal);
       document.getElementById("password-form").addEventListener("submit", handlePassword);
@@ -979,6 +998,12 @@
 
       function apiPath(path) {
         return (adminApiUrl || "") + path;
+      }
+
+      function nextFrame() {
+        return new Promise(function (resolve) {
+          window.requestAnimationFrame(resolve);
+        });
       }
 
       async function handlePassword(event) {
@@ -1167,6 +1192,7 @@
           }
           var body = await response.json();
           var rows = body.donations || [];
+          currentDonations = rows;
           renderRows(rows);
           renderSummary(rows);
           formMessage.textContent = "";
@@ -1400,7 +1426,7 @@
       async function handleInsert(event) {
         event.preventDefault();
         formMessage.className = "message";
-        formMessage.textContent = "";
+        formMessage.textContent = "Donatie toevoegen...";
 
         if (localPreview) {
           formMessage.className = "message error";
@@ -1416,8 +1442,12 @@
           return;
         }
 
+        var submitButton = form.querySelector("button[type='submit']");
+        var originalButtonText = submitButton.textContent;
         try {
-          form.querySelector("button[type='submit']").disabled = true;
+          submitButton.disabled = true;
+          submitButton.textContent = "Toevoegen...";
+          await nextFrame();
           var response = await fetch(apiPath("/api/donations"), {
             method: "POST",
             credentials: "include",
@@ -1433,15 +1463,23 @@
             throw await httpError(response, "Toevoegen is mislukt.");
           }
 
+          var body = await response.json();
+          var donation = body.donation;
+          if (donation) {
+            currentDonations = [donation].concat(currentDonations);
+            renderRows(currentDonations);
+            renderSummary(currentDonations);
+          }
           form.reset();
           formMessage.textContent = "Donatie toegevoegd.";
-          await Promise.all([loadAdminData(), loadChangelog()]);
+          loadChangelog();
         } catch (error) {
           handleAuthError(error);
           formMessage.className = "message error";
           formMessage.textContent = error.message || "Toevoegen is mislukt.";
         } finally {
-          form.querySelector("button[type='submit']").disabled = false;
+          submitButton.disabled = false;
+          submitButton.textContent = originalButtonText;
         }
       }
 
@@ -1519,10 +1557,18 @@
         var wrapper = document.createElement("div");
         wrapper.className = "action-editor";
         wrapper.dataset.index = String(index);
+        wrapper.dataset.actionId = action.id || "";
+        wrapper.dataset.createdBy = action.created_by || "";
+        wrapper.dataset.createdAt = action.created_at || "";
+        wrapper.dataset.updatedBy = action.updated_by || "";
+        wrapper.dataset.updatedAt = action.updated_at || "";
 
         wrapper.innerHTML =
           '<div class="action-editor-head">' +
-            '<span class="action-editor-number">' + String(index + 1).padStart(2, "0") + '</span>' +
+            '<div class="action-editor-identity">' +
+              '<span class="action-editor-number">' + String(index + 1).padStart(2, "0") + '</span>' +
+              '<div class="action-meta" data-action-meta></div>' +
+            '</div>' +
             '<button class="button danger" type="button" data-remove-action>Verwijder actie</button>' +
           '</div>' +
           '<div class="field-row">' +
@@ -1564,6 +1610,7 @@
         wrapper.querySelector("[name='action_status_label']").value = action.status_label || "Status";
         wrapper.querySelector("[name='action_status']").value = action.status || "Open";
         wrapper.querySelector("[name='action_variant']").value = action.variant || "";
+        renderActionMeta(wrapper, action);
         wrapper.querySelector("[data-remove-action]").addEventListener("click", function () {
           wrapper.remove();
           renumberActionEditors();
@@ -1579,9 +1626,31 @@
           status_label: "Status",
           status: "Open",
           tags: ["Nieuw"],
-          variant: ""
+          variant: "",
+          created_by: currentAdminName || "Jij",
+          updated_by: currentAdminName || "Jij"
         }, actionsEditor.children.length));
         renumberActionEditors();
+      }
+
+      function renderActionMeta(wrapper, action) {
+        var meta = wrapper.querySelector("[data-action-meta]");
+        var createdBy = action.created_by || currentAdminName || "Nog niet opgeslagen";
+        var updatedBy = action.updated_by || "";
+        var createdAt = action.created_at ? " - " + formatDate(action.created_at) : "";
+        var updatedAt = action.updated_at ? " - " + formatDate(action.updated_at) : "";
+        var lines = ["Toegevoegd door " + createdBy + createdAt];
+        if (updatedBy && updatedBy !== createdBy) {
+          lines.push("Bewerkt door " + updatedBy + updatedAt);
+        } else if (updatedBy) {
+          lines.push("Laatst bewerkt door " + updatedBy + updatedAt);
+        }
+        meta.innerHTML = "";
+        lines.forEach(function (line) {
+          var span = document.createElement("span");
+          span.textContent = line;
+          meta.appendChild(span);
+        });
       }
 
       function renumberActionEditors() {
@@ -1594,6 +1663,7 @@
       function collectActions() {
         return Array.prototype.slice.call(actionsEditor.children).map(function (editor) {
           return {
+            id: editor.dataset.actionId || "",
             title: editor.querySelector("[name='action_title']").value.trim(),
             description: editor.querySelector("[name='action_description']").value.trim(),
             status_label: editor.querySelector("[name='action_status_label']").value.trim() || "Status",
@@ -1601,7 +1671,11 @@
             tags: editor.querySelector("[name='action_tags']").value.split(",").map(function (tag) {
               return tag.trim();
             }).filter(Boolean),
-            variant: editor.querySelector("[name='action_variant']").value
+            variant: editor.querySelector("[name='action_variant']").value,
+            created_by: editor.dataset.createdBy || "",
+            created_at: editor.dataset.createdAt || "",
+            updated_by: editor.dataset.updatedBy || "",
+            updated_at: editor.dataset.updatedAt || ""
           };
         }).filter(function (action) {
           return action.title || action.description;
@@ -1613,16 +1687,24 @@
         actionsMessage.className = "message";
         actionsMessage.textContent = "Acties opslaan...";
         syncSettingsStateFromForms();
+        var submitButton = event.currentTarget.querySelector("button[type='submit']");
+        var originalButtonText = submitButton.textContent;
 
         try {
+          submitButton.disabled = true;
+          submitButton.textContent = "Opslaan...";
+          await nextFrame();
           await saveSettings(settingsState);
           renderActionsEditor(settingsState.ACTIONS);
           actionsMessage.textContent = "Acties opgeslagen. De publieke site gebruikt deze lijst nu.";
-          await loadChangelog();
+          loadChangelog();
         } catch (error) {
           handleAuthError(error);
           actionsMessage.className = "message error";
           actionsMessage.textContent = error.message || "Acties opslaan is mislukt.";
+        } finally {
+          submitButton.disabled = false;
+          submitButton.textContent = originalButtonText;
         }
       }
 
@@ -1647,6 +1729,16 @@
 
         if (!response.ok) {
           throw await httpError(response, "Opslaan is mislukt.");
+        }
+        var body = await response.json();
+        if (body.settings) {
+          settingsState = {
+            GOAL_EUR: Number(body.settings.GOAL_EUR || nextSettings.GOAL_EUR || 10000),
+            IBAN: body.settings.IBAN || "",
+            IBAN_NAME: body.settings.IBAN_NAME || "",
+            ACTIONS: normalizeActions(body.settings.ACTIONS)
+          };
+          goal = settingsState.GOAL_EUR;
         }
       }
 
@@ -1701,7 +1793,12 @@
             tags: Array.isArray(action.tags) ? action.tags.map(String).map(function (tag) {
               return tag.trim();
             }).filter(Boolean).slice(0, 4) : [],
-            variant: action.variant === "featured" || action.variant === "coral" ? action.variant : ""
+            variant: action.variant === "featured" || action.variant === "coral" ? action.variant : "",
+            id: String(action.id || "").trim(),
+            created_by: String(action.created_by || "").trim(),
+            created_at: String(action.created_at || "").trim(),
+            updated_by: String(action.updated_by || "").trim(),
+            updated_at: String(action.updated_at || "").trim()
           };
         }).filter(function (action) {
           return action.title || action.description;
