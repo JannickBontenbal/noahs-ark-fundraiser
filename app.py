@@ -153,6 +153,40 @@ def action_signature(action):
     }
 
 
+def describe_value_change(label, before, after):
+    before_text = clean_text(before, 160) or "leeg"
+    after_text = clean_text(after, 160) or "leeg"
+    return label + ": '" + before_text + "' -> '" + after_text + "'"
+
+
+def describe_action_delta(previous_action, next_action):
+    if not previous_action:
+        return "Nieuwe actie met status '" + next_action.get("status", "Open") + "'."
+    if not next_action:
+        return "Actie is verwijderd."
+
+    labels = {
+        "title": "Titel",
+        "description": "Beschrijving",
+        "status_label": "Status label",
+        "status": "Status",
+        "tags": "Tags",
+        "variant": "Visuele stijl",
+    }
+    changes = []
+    for key, label in labels.items():
+        before = previous_action.get(key, [])
+        after = next_action.get(key, [])
+        if before == after:
+            continue
+        if isinstance(before, list):
+            before = ", ".join(before)
+        if isinstance(after, list):
+            after = ", ".join(after)
+        changes.append(describe_value_change(label, before, after))
+    return " | ".join(changes) or "Metadata bijgewerkt."
+
+
 def stamp_action_metadata(previous_actions, incoming_actions, actor):
     previous = normalize_actions(previous_actions)
     incoming = normalize_actions(incoming_actions)
@@ -180,7 +214,7 @@ def stamp_action_metadata(previous_actions, incoming_actions, actor):
             if action_signature(action) != action_signature(previous_action):
                 action["updated_by"] = actor
                 action["updated_at"] = timestamp
-                events.append(("actie bewerkt", action.get("title", "Nieuwe actie")))
+                events.append(("actie bewerkt", action.get("title", "Nieuwe actie"), describe_action_delta(previous_action, action)))
             else:
                 action["updated_by"] = previous_action.get("updated_by") or previous_action.get("created_by") or actor
                 action["updated_at"] = previous_action.get("updated_at") or previous_action.get("created_at") or timestamp
@@ -190,7 +224,7 @@ def stamp_action_metadata(previous_actions, incoming_actions, actor):
             action["created_at"] = timestamp
             action["updated_by"] = actor
             action["updated_at"] = timestamp
-            events.append(("actie toegevoegd", action.get("title", "Nieuwe actie")))
+            events.append(("actie toegevoegd", action.get("title", "Nieuwe actie"), describe_action_delta(None, action)))
 
         stamped.append(action)
 
@@ -205,7 +239,7 @@ def stamp_action_metadata(previous_actions, incoming_actions, actor):
             continue
         title = previous_action.get("title", "Nieuwe actie")
         if title and title not in [action.get("title") for action in stamped]:
-            events.append(("actie verwijderd", title))
+            events.append(("actie verwijderd", title, describe_action_delta(previous_action, None)))
 
     return stamped, events
 
@@ -256,6 +290,64 @@ def current_admin_name():
     return clean_text(session.get("admin_name"), 120) or "Admin"
 
 
+PRESENCE_COLORS = [
+    "#d9ff3f",
+    "#ff5a3d",
+    "#77e7ff",
+    "#f7b84b",
+    "#caa7ff",
+    "#72e6a5",
+    "#ff8bd1",
+    "#9be7d8",
+]
+
+
+def current_admin_session_id():
+    if not session.get("admin_session_id"):
+        session["admin_session_id"] = str(uuid.uuid4())
+    return session["admin_session_id"]
+
+
+def color_for_admin(name, session_id=""):
+    source = (name or "") + (session_id or "")
+    index = int(hashlib.sha256(source.encode("utf-8")).hexdigest(), 16) % len(PRESENCE_COLORS)
+    return PRESENCE_COLORS[index]
+
+
+def choose_presence_color(name, session_id):
+    preferred = color_for_admin(name, session_id)
+    if not has_admin_config():
+        return preferred
+
+    from datetime import datetime, timedelta, timezone
+
+    stale_before = (datetime.now(timezone.utc) - timedelta(seconds=45)).isoformat()
+    try:
+        response = (
+            supabase_admin()
+            .table("admin_presence")
+            .select("admin_color")
+            .gte("last_seen", stale_before)
+            .execute()
+        )
+    except Exception:
+        return preferred
+
+    used = {row.get("admin_color") for row in (response.data or []) if row.get("admin_color")}
+    if preferred not in used:
+        return preferred
+    for color in PRESENCE_COLORS:
+        if color not in used:
+            return color
+    return preferred
+
+
+def current_admin_color():
+    if not session.get("admin_color"):
+        session["admin_color"] = color_for_admin(current_admin_name(), current_admin_session_id())
+    return session["admin_color"]
+
+
 def log_admin_change(action, entity_type, entity_id=None, details=None, admin_name=None):
     if not has_admin_config():
         return
@@ -294,6 +386,12 @@ def index():
 @app.get("/admin.html")
 def admin_page():
     return send_from_directory(BASE_DIR, "admin.html")
+
+
+@app.get("/changelog")
+@app.get("/changelog.html")
+def changelog_page():
+    return send_from_directory(BASE_DIR, "changelog.html")
 
 
 @app.get("/grote-donatie")
@@ -344,13 +442,25 @@ def login():
 
     session["admin"] = True
     session["admin_name"] = admin_name
+    session["admin_session_id"] = str(uuid.uuid4())
+    session["admin_color"] = choose_presence_color(admin_name, session["admin_session_id"])
     log_admin_change("ingelogd", "session", details=admin_name + " opende het adminpaneel.")
-    return jsonify({"ok": True, "admin_name": admin_name})
+    return jsonify({
+        "ok": True,
+        "admin_name": admin_name,
+        "admin_color": session["admin_color"],
+        "admin_session_id": session["admin_session_id"],
+    })
 
 
 @app.post("/api/logout")
 def logout():
     if session.get("admin"):
+        if has_admin_config() and session.get("admin_session_id"):
+            try:
+                supabase_admin().table("admin_presence").delete().eq("session_id", session["admin_session_id"]).execute()
+            except Exception as error:
+                print("Admin presence cleanup failed:", error)
         log_admin_change("uitgelogd", "session", details=current_admin_name() + " sloot het adminpaneel.")
     session.clear()
     return jsonify({"ok": True})
@@ -361,7 +471,74 @@ def me():
     blocked = admin_required()
     if blocked:
         return blocked
-    return jsonify({"admin_name": current_admin_name()})
+    return jsonify({
+        "admin_name": current_admin_name(),
+        "admin_color": current_admin_color(),
+        "admin_session_id": current_admin_session_id(),
+    })
+
+
+@app.post("/api/presence")
+def update_presence():
+    blocked = admin_required()
+    if blocked:
+        return blocked
+
+    if not has_admin_config():
+        return jsonify({"users": []})
+
+    from datetime import datetime, timedelta, timezone
+
+    payload = request.get_json(silent=True) or {}
+    section = clean_text(payload.get("section"), 80) or "Dashboard"
+    now = datetime.now(timezone.utc)
+    stale_before = (now - timedelta(seconds=45)).isoformat()
+    row = {
+        "session_id": current_admin_session_id(),
+        "admin_name": current_admin_name(),
+        "admin_color": current_admin_color(),
+        "section": section,
+        "last_seen": now.isoformat(),
+    }
+
+    try:
+        supabase_admin().table("admin_presence").delete().lt("last_seen", stale_before).execute()
+        supabase_admin().table("admin_presence").upsert(row, on_conflict="session_id").execute()
+    except Exception as error:
+        return jsonify({"error": "Kon online gebruikers niet bijwerken. Run supabase-schema.sql opnieuw in Supabase. " + str(error)}), 500
+
+    return list_presence()
+
+
+@app.get("/api/presence")
+def list_presence():
+    blocked = admin_required()
+    if blocked:
+        return blocked
+
+    if not has_admin_config():
+        return jsonify({"users": []})
+
+    from datetime import datetime, timedelta, timezone
+
+    stale_before = (datetime.now(timezone.utc) - timedelta(seconds=45)).isoformat()
+    try:
+        supabase_admin().table("admin_presence").delete().lt("last_seen", stale_before).execute()
+        response = (
+            supabase_admin()
+            .table("admin_presence")
+            .select("session_id, admin_name, admin_color, section, last_seen")
+            .gte("last_seen", stale_before)
+            .order("last_seen", desc=True)
+            .execute()
+        )
+    except Exception as error:
+        return jsonify({"error": "Kon online gebruikers niet laden. Run supabase-schema.sql opnieuw in Supabase. " + str(error)}), 500
+
+    return jsonify({
+        "current_session_id": current_admin_session_id(),
+        "users": response.data or [],
+    })
 
 
 @app.get("/api/settings")
@@ -411,21 +588,26 @@ def update_settings():
     
     if save_settings(settings):
         changed = []
+        detail_lines = []
         if previous_settings["GOAL_EUR"] != str(settings.get("GOAL_EUR", "")):
             changed.append("doel")
+            detail_lines.append(describe_value_change("Doel", previous_settings["GOAL_EUR"], settings.get("GOAL_EUR", "")))
         if previous_settings["IBAN"] != settings.get("IBAN", ""):
             changed.append("IBAN")
+            detail_lines.append(describe_value_change("IBAN", previous_settings["IBAN"], settings.get("IBAN", "")))
         if previous_settings["IBAN_NAME"] != settings.get("IBAN_NAME", ""):
             changed.append("rekeninghouder")
+            detail_lines.append(describe_value_change("Rekeninghouder", previous_settings["IBAN_NAME"], settings.get("IBAN_NAME", "")))
         if previous_settings["ACTIONS"] != settings.get("ACTIONS", []) and not action_events:
             changed.append("lopende acties")
+            detail_lines.append("Lopende acties zijn bijgewerkt.")
         if changed:
             log_admin_change(
                 "bijgewerkt",
                 "settings",
-                details=current_admin_name() + " wijzigde " + ", ".join(changed) + ".",
+                details=current_admin_name() + " wijzigde " + ", ".join(changed) + ". " + " | ".join(detail_lines),
             )
-        for action, title in action_events:
+        for action, title, delta in action_events:
             verb = {
                 "actie toegevoegd": "voegde toe",
                 "actie bewerkt": "bewerkte",
@@ -434,7 +616,7 @@ def update_settings():
             log_admin_change(
                 action,
                 "action",
-                details=current_admin_name() + " " + verb + " actie '" + title + "'.",
+                details=current_admin_name() + " " + verb + " actie '" + title + "'. " + delta,
             )
         return jsonify({
             "ok": True,
@@ -639,7 +821,17 @@ def large_donation_form_pdf(form_id):
     if not response.data:
         return jsonify({"error": "Formulier niet gevonden."}), 404
 
-    pdf = build_large_donation_pdf(response.data[0])
+    form_row = response.data[0]
+    viewer_name = current_admin_name() if session.get("admin") else "Website gebruiker"
+    log_admin_change(
+        "PDF geopend",
+        "large_donation_form",
+        form_id,
+        viewer_name + " opende PDF voor " + (form_row.get("company_name") or form_row.get("donor_name") or "Onbekend") + " (" + str(form_row.get("amount", "")) + " EUR).",
+        admin_name=viewer_name,
+    )
+
+    pdf = build_large_donation_pdf(form_row)
     return Response(
         pdf,
         mimetype="application/pdf",
@@ -850,6 +1042,20 @@ def list_changelog():
     except Exception as error:
         return jsonify({"error": "Kon changelog niet laden. Run supabase-schema.sql opnieuw in Supabase. " + str(error)}), 500
     return jsonify({"changes": response.data or []})
+
+
+@app.post("/api/changelog/viewed")
+def changelog_viewed():
+    blocked = admin_required()
+    if blocked:
+        return blocked
+
+    log_admin_change(
+        "changelog geopend",
+        "changelog",
+        details=current_admin_name() + " opende de changelog pagina.",
+    )
+    return jsonify({"ok": True})
 
 
 @app.get("/api/health")

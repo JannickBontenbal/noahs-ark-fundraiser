@@ -67,6 +67,25 @@ create table if not exists public.admin_changelog (
 
 alter table public.admin_changelog enable row level security;
 
+create table if not exists public.admin_presence (
+  session_id text primary key,
+  admin_name text not null,
+  admin_color text not null,
+  section text not null default 'Dashboard',
+  last_seen timestamptz not null default now()
+);
+
+alter table public.admin_presence enable row level security;
+
+alter table public.admin_presence
+add column if not exists admin_color text not null default '#d9ff3f';
+
+alter table public.admin_presence
+add column if not exists section text not null default 'Dashboard';
+
+alter table public.admin_presence
+add column if not exists last_seen timestamptz not null default now();
+
 create or replace function public.prevent_admin_changelog_mutation()
 returns trigger
 language plpgsql

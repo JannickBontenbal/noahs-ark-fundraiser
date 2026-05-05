@@ -265,6 +265,39 @@
       box-shadow: 0 0 0 4px rgba(217, 255, 63, 0.14);
     }
 
+    .presence-tray {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 7px;
+      align-items: center;
+      max-width: 420px;
+    }
+
+    .presence-chip {
+      display: inline-flex;
+      align-items: center;
+      gap: 7px;
+      min-height: 34px;
+      padding: 0 10px;
+      border: 1px solid var(--border);
+      border-radius: 999px;
+      background: rgba(255, 248, 232, 0.08);
+      color: var(--text-primary);
+      font-family: var(--mono);
+      font-size: 9px;
+      font-weight: 700;
+      text-transform: uppercase;
+      white-space: nowrap;
+    }
+
+    .presence-chip-dot {
+      width: 9px;
+      height: 9px;
+      border-radius: 999px;
+      background: var(--presence-color, var(--accent));
+      box-shadow: 0 0 0 4px color-mix(in srgb, var(--presence-color, var(--accent)) 18%, transparent);
+    }
+
     .admin-wrap {
       width: min(100%, var(--max-width));
       margin: 0 auto;
@@ -328,10 +361,39 @@
     }
 
     .panel {
+      position: relative;
       border: 1px solid var(--border);
       border-radius: 8px;
       overflow: hidden;
       background: rgba(255, 248, 232, 0.07);
+      transition: border-color 180ms var(--ease), box-shadow 180ms var(--ease);
+    }
+
+    .panel.presence-active {
+      border-color: var(--presence-color, var(--accent));
+      box-shadow: 0 0 0 2px color-mix(in srgb, var(--presence-color, var(--accent)) 44%, transparent);
+    }
+
+    .presence-section-badge {
+      position: absolute;
+      top: 10px;
+      right: 10px;
+      z-index: 3;
+      display: inline-flex;
+      align-items: center;
+      gap: 7px;
+      max-width: min(260px, calc(100% - 20px));
+      padding: 7px 9px;
+      border: 1px solid var(--presence-color, var(--accent));
+      border-radius: 999px;
+      background: var(--ink);
+      color: var(--text-primary);
+      font-family: var(--mono);
+      font-size: 9px;
+      font-weight: 700;
+      line-height: 1;
+      text-transform: uppercase;
+      white-space: nowrap;
     }
 
     .panel.light {
@@ -565,44 +627,6 @@
       text-transform: uppercase;
     }
 
-    .changelog-panel[hidden] {
-      display: none;
-    }
-
-    .change-list {
-      display: grid;
-      gap: 10px;
-    }
-
-    .change-item {
-      display: grid;
-      gap: 6px;
-      padding: 14px;
-      border: 1px solid var(--border);
-      border-radius: 8px;
-      background: rgba(255, 248, 232, 0.06);
-    }
-
-    .change-meta {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 8px;
-      align-items: center;
-      color: var(--text-muted);
-      font-family: var(--mono);
-      font-size: 10px;
-      font-weight: 700;
-      text-transform: uppercase;
-    }
-
-    .change-author {
-      width: fit-content;
-      padding: 4px 7px;
-      border-radius: 999px;
-      background: var(--accent);
-      color: var(--ink);
-    }
-
     .actions-editor {
       display: grid;
       gap: 14px;
@@ -682,8 +706,13 @@
 
       .button,
       .top-actions .button,
-      .top-actions .user-pill {
+      .top-actions .user-pill,
+      .presence-tray {
         width: 100%;
+      }
+
+      .presence-tray {
+        max-width: none;
       }
 
       .summary,
@@ -732,7 +761,8 @@
       </a>
       <div class="top-actions">
         <span class="user-pill"><span class="presence-dot"></span><span id="active-user">Ingelogd</span></span>
-        <button class="button" type="button" id="changelog-toggle">Changelog</button>
+        <div class="presence-tray" id="presence-tray" aria-label="Online teamleden"></div>
+        <a class="button" href="changelog.html" target="_blank" rel="noreferrer">Changelog</a>
         <a class="button" href="#large-forms-panel">Formulieren</a>
         <button class="button" type="button" id="refresh-button">Vernieuwen</button>
         <button class="button danger" type="button" id="logout-button">Uitloggen</button>
@@ -773,7 +803,7 @@
       </section>
 
       <div class="dashboard-grid">
-        <section class="panel light" aria-labelledby="add-heading">
+        <section class="panel light" aria-labelledby="add-heading" data-presence-section="Donatie toevoegen">
           <div class="panel-head">
             <div>
               <p class="kicker">Nieuw</p>
@@ -802,7 +832,7 @@
           </div>
         </section>
 
-        <section class="panel" aria-labelledby="log-heading">
+        <section class="panel" aria-labelledby="log-heading" data-presence-section="Donatielogboek">
           <div class="panel-head">
             <div>
               <p class="kicker">Logboek</p>
@@ -832,23 +862,7 @@
       </div>
 
       <div class="section-stack">
-        <section class="panel changelog-panel" id="changelog-panel" aria-labelledby="changelog-heading" hidden>
-          <div class="panel-head">
-            <div>
-              <p class="kicker">Alleen lezen</p>
-              <h2 id="changelog-heading">Changelog</h2>
-            </div>
-            <button class="button" type="button" id="changelog-close">Sluiten</button>
-          </div>
-          <div class="panel-body">
-            <div class="change-list" id="changelog-body">
-              <p class="empty-row">Nog geen wijzigingen geladen.</p>
-            </div>
-            <p class="message" id="changelog-message" aria-live="polite"></p>
-          </div>
-        </section>
-
-        <section class="panel" id="large-forms-panel" aria-labelledby="large-forms-heading">
+        <section class="panel" id="large-forms-panel" aria-labelledby="large-forms-heading" data-presence-section="Grote formulieren">
           <div class="panel-head">
             <div>
               <p class="kicker">Formulieren</p>
@@ -881,7 +895,7 @@
           </div>
         </section>
 
-        <section class="panel light" aria-labelledby="settings-heading">
+        <section class="panel light" aria-labelledby="settings-heading" data-presence-section="Campagneparameters">
           <div class="panel-head">
             <div>
               <p class="kicker">Instellingen</p>
@@ -912,7 +926,7 @@
           </div>
         </section>
 
-        <section class="panel light" aria-labelledby="actions-admin-heading">
+        <section class="panel light" aria-labelledby="actions-admin-heading" data-presence-section="Lopende acties">
           <div class="panel-head">
             <div>
               <p class="kicker">Publieke site</p>
@@ -946,6 +960,11 @@
       var goal = Number(config.GOAL_EUR || 10000);
       var adminApiUrl = cleanUrl(config.ADMIN_API_URL || "");
       var currentAdminName = window.sessionStorage.getItem("naf_admin_name") || "";
+      var currentAdminColor = window.sessionStorage.getItem("naf_admin_color") || "#d9ff3f";
+      var currentAdminSessionId = window.sessionStorage.getItem("naf_admin_session_id") || "";
+      var currentPresenceSection = "Dashboard";
+      var presenceTimer = null;
+      var presencePollTimer = null;
       var currencyFormat = new Intl.NumberFormat("nl-NL", {
         style: "currency",
         currency: "EUR",
@@ -959,13 +978,11 @@
       var settingsMessage = document.getElementById("settings-message");
       var actionsMessage = document.getElementById("actions-message");
       var largeFormsMessage = document.getElementById("large-forms-message");
-      var changelogMessage = document.getElementById("changelog-message");
       var donationsBody = document.getElementById("donations-body");
       var largeFormsBody = document.getElementById("large-forms-body");
-      var changelogBody = document.getElementById("changelog-body");
       var actionsEditor = document.getElementById("actions-editor");
       var activeUser = document.getElementById("active-user");
-      var changelogPanel = document.getElementById("changelog-panel");
+      var presenceTray = document.getElementById("presence-tray");
       var settingsState = {
         GOAL_EUR: goal,
         IBAN: config.IBAN || "",
@@ -982,10 +999,9 @@
       document.getElementById("add-action-button").addEventListener("click", addAction);
       document.getElementById("refresh-button").addEventListener("click", refreshAll);
       document.getElementById("logout-button").addEventListener("click", handleLogout);
-      document.getElementById("changelog-toggle").addEventListener("click", toggleChangelog);
-      document.getElementById("changelog-close").addEventListener("click", function () {
-        changelogPanel.hidden = true;
-      });
+      document.addEventListener("focusin", updatePresenceSectionFromEvent);
+      document.addEventListener("click", updatePresenceSectionFromEvent);
+      document.addEventListener("input", updatePresenceSectionFromEvent);
 
       if (window.sessionStorage.getItem("naf_admin_unlocked") === "true") {
         setActiveUser(currentAdminName || "Admin");
@@ -1041,6 +1057,10 @@
           window.sessionStorage.setItem("naf_admin_unlocked", "true");
           var body = await response.json();
           window.sessionStorage.setItem("naf_admin_name", body.admin_name || adminName);
+          window.sessionStorage.setItem("naf_admin_color", body.admin_color || currentAdminColor);
+          window.sessionStorage.setItem("naf_admin_session_id", body.admin_session_id || "");
+          currentAdminColor = body.admin_color || currentAdminColor;
+          currentAdminSessionId = body.admin_session_id || "";
           setActiveUser(body.admin_name || adminName);
           unlock();
         } catch (error) {
@@ -1052,6 +1072,7 @@
         gate.style.display = "none";
         app.classList.add("is-visible");
         syncCurrentUser();
+        startPresence();
         refreshAll();
       }
 
@@ -1060,16 +1081,18 @@
           loadSettingsForm();
           loadAdminData();
           loadLargeForms();
-          loadChangelog();
           return;
         }
-        await Promise.all([loadSettingsForm(), loadAdminData(), loadLargeForms(), loadChangelog()]);
+        await Promise.all([loadSettingsForm(), loadAdminData(), loadLargeForms()]);
       }
 
       async function handleLogout() {
         if (localPreview) {
           window.sessionStorage.removeItem("naf_admin_unlocked");
           window.sessionStorage.removeItem("naf_admin_name");
+          window.sessionStorage.removeItem("naf_admin_color");
+          window.sessionStorage.removeItem("naf_admin_session_id");
+          stopPresence();
           app.classList.remove("is-visible");
           gate.style.display = "grid";
           return;
@@ -1085,6 +1108,9 @@
         }
         window.sessionStorage.removeItem("naf_admin_unlocked");
         window.sessionStorage.removeItem("naf_admin_name");
+        window.sessionStorage.removeItem("naf_admin_color");
+        window.sessionStorage.removeItem("naf_admin_session_id");
+        stopPresence();
         app.classList.remove("is-visible");
         gate.style.display = "grid";
       }
@@ -1105,6 +1131,10 @@
           var body = await response.json();
           if (body.admin_name) {
             window.sessionStorage.setItem("naf_admin_name", body.admin_name);
+            window.sessionStorage.setItem("naf_admin_color", body.admin_color || currentAdminColor);
+            window.sessionStorage.setItem("naf_admin_session_id", body.admin_session_id || currentAdminSessionId);
+            currentAdminColor = body.admin_color || currentAdminColor;
+            currentAdminSessionId = body.admin_session_id || currentAdminSessionId;
             setActiveUser(body.admin_name);
           }
         } catch (error) {
@@ -1115,14 +1145,158 @@
       function setActiveUser(name) {
         currentAdminName = name || "Admin";
         activeUser.textContent = "Bewerkt als " + currentAdminName;
+        activeUser.closest(".user-pill").style.setProperty("--presence-color", currentAdminColor);
+        activeUser.closest(".user-pill").querySelector(".presence-dot").style.background = currentAdminColor;
       }
 
-      function toggleChangelog() {
-        changelogPanel.hidden = !changelogPanel.hidden;
-        if (!changelogPanel.hidden) {
-          changelogPanel.scrollIntoView({ behavior: "smooth", block: "start" });
-          loadChangelog();
+      function startPresence() {
+        stopPresence();
+        sendPresence();
+        pollPresence();
+        if (!localPreview) {
+          presenceTimer = window.setInterval(sendPresence, 8000);
+          presencePollTimer = window.setInterval(pollPresence, 5000);
         }
+      }
+
+      function stopPresence() {
+        if (presenceTimer) {
+          window.clearInterval(presenceTimer);
+          presenceTimer = null;
+        }
+        if (presencePollTimer) {
+          window.clearInterval(presencePollTimer);
+          presencePollTimer = null;
+        }
+        renderPresence([]);
+      }
+
+      function updatePresenceSectionFromEvent(event) {
+        var section = event.target.closest("[data-presence-section]");
+        if (!section) {
+          return;
+        }
+        currentPresenceSection = section.dataset.presenceSection || "Dashboard";
+        sendPresence();
+      }
+
+      async function sendPresence() {
+        if (localPreview || !window.sessionStorage.getItem("naf_admin_unlocked")) {
+          renderPresence([]);
+          return;
+        }
+
+        try {
+          var response = await fetch(apiPath("/api/presence"), {
+            method: "POST",
+            credentials: "include",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ section: currentPresenceSection })
+          });
+          if (!response.ok) {
+            return;
+          }
+          var body = await response.json();
+          renderPresence(body.users || [], body.current_session_id);
+        } catch (error) {
+          console.error(error);
+        }
+      }
+
+      async function pollPresence() {
+        if (localPreview || !window.sessionStorage.getItem("naf_admin_unlocked")) {
+          return;
+        }
+
+        try {
+          var response = await fetch(apiPath("/api/presence"), {
+            credentials: "include"
+          });
+          if (!response.ok) {
+            return;
+          }
+          var body = await response.json();
+          renderPresence(body.users || [], body.current_session_id);
+        } catch (error) {
+          console.error(error);
+        }
+      }
+
+      function renderPresence(users, currentSessionId) {
+        var ownSession = currentSessionId || currentAdminSessionId;
+        var others = users.filter(function (user) {
+          return user.session_id !== ownSession;
+        });
+        presenceTray.innerHTML = "";
+        clearPresenceHighlights();
+
+        if (!others.length) {
+          var empty = document.createElement("span");
+          empty.className = "presence-chip muted";
+          empty.textContent = "Alleen jij online";
+          presenceTray.appendChild(empty);
+          return;
+        }
+
+        others.forEach(function (user) {
+          var chip = document.createElement("span");
+          chip.className = "presence-chip";
+          chip.style.setProperty("--presence-color", user.admin_color || "#d9ff3f");
+          chip.innerHTML = '<span class="presence-chip-dot"></span><span></span>';
+          chip.querySelector("span:last-child").textContent = user.admin_name + " - " + (user.section || "Dashboard");
+          presenceTray.appendChild(chip);
+        });
+
+        applyPresenceHighlights(others);
+      }
+
+      function clearPresenceHighlights() {
+        document.querySelectorAll("[data-presence-section].presence-active").forEach(function (panel) {
+          panel.classList.remove("presence-active");
+          panel.style.removeProperty("--presence-color");
+          var badge = panel.querySelector(".presence-section-badge");
+          if (badge) {
+            badge.remove();
+          }
+        });
+      }
+
+      function applyPresenceHighlights(users) {
+        var bySection = {};
+        users.forEach(function (user) {
+          var section = user.section || "Dashboard";
+          if (!bySection[section]) {
+            bySection[section] = [];
+          }
+          bySection[section].push(user);
+        });
+
+        Object.keys(bySection).forEach(function (sectionName) {
+          var panel = document.querySelector('[data-presence-section="' + cssEscape(sectionName) + '"]');
+          if (!panel) {
+            return;
+          }
+          var usersInSection = bySection[sectionName];
+          var first = usersInSection[0];
+          panel.classList.add("presence-active");
+          panel.style.setProperty("--presence-color", first.admin_color || "#d9ff3f");
+
+          var badge = document.createElement("span");
+          badge.className = "presence-section-badge";
+          badge.style.setProperty("--presence-color", first.admin_color || "#d9ff3f");
+          badge.innerHTML = '<span class="presence-chip-dot"></span><span></span>';
+          badge.querySelector("span:last-child").textContent = usersInSection.map(function (user) {
+            return user.admin_name;
+          }).join(", ");
+          panel.appendChild(badge);
+        });
+      }
+
+      function cssEscape(value) {
+        if (window.CSS && window.CSS.escape) {
+          return window.CSS.escape(value);
+        }
+        return String(value).replace(/"/g, '\\"');
       }
 
       async function loadSettingsForm() {
@@ -1230,38 +1404,6 @@
         }
       }
 
-      async function loadChangelog() {
-        if (localPreview) {
-          renderChangelog([{
-            admin_name: currentAdminName || "Preview",
-            action: "preview geopend",
-            entity_type: "local",
-            details: "Lokale preview schrijft geen echte changelog.",
-            created_at: new Date().toISOString()
-          }]);
-          changelogMessage.textContent = "Lokale previewmodus.";
-          return;
-        }
-
-        try {
-          changelogMessage.className = "message";
-          changelogMessage.textContent = "Changelog laden...";
-          var response = await fetch(apiPath("/api/changelog"), {
-            credentials: "include"
-          });
-          if (!response.ok) {
-            throw await httpError(response, "Kon changelog niet laden.");
-          }
-          var body = await response.json();
-          renderChangelog(body.changes || []);
-          changelogMessage.textContent = "";
-        } catch (error) {
-          handleAuthError(error);
-          changelogMessage.className = "message error";
-          changelogMessage.textContent = error.message || "Kon changelog niet laden.";
-        }
-      }
-
       function renderSummary(rows) {
         var total = rows.reduce(function (sum, donation) {
           return sum + (Number(donation.amount) || 0);
@@ -1360,50 +1502,6 @@
         });
       }
 
-      function renderChangelog(rows) {
-        changelogBody.innerHTML = "";
-
-        if (!rows.length) {
-          var empty = document.createElement("p");
-          empty.className = "empty-row";
-          empty.textContent = "Nog geen wijzigingen.";
-          changelogBody.appendChild(empty);
-          return;
-        }
-
-        rows.forEach(function (change) {
-          var item = document.createElement("article");
-          item.className = "change-item";
-
-          var meta = document.createElement("div");
-          meta.className = "change-meta";
-
-          var author = document.createElement("span");
-          author.className = "change-author";
-          author.textContent = change.admin_name || "Admin";
-          meta.appendChild(author);
-
-          var action = document.createElement("span");
-          action.textContent = change.action || "wijziging";
-          meta.appendChild(action);
-
-          var type = document.createElement("span");
-          type.textContent = change.entity_type || "admin";
-          meta.appendChild(type);
-
-          var date = document.createElement("span");
-          date.textContent = formatDate(change.created_at);
-          meta.appendChild(date);
-
-          var details = document.createElement("p");
-          details.textContent = change.details || "Geen extra details.";
-
-          item.appendChild(meta);
-          item.appendChild(details);
-          changelogBody.appendChild(item);
-        });
-      }
-
       function cell(value, isMuted) {
         var td = document.createElement("td");
         td.textContent = value;
@@ -1472,7 +1570,6 @@
           }
           form.reset();
           formMessage.textContent = "Donatie toegevoegd.";
-          loadChangelog();
         } catch (error) {
           handleAuthError(error);
           formMessage.className = "message error";
@@ -1497,7 +1594,7 @@
             throw await httpError(response, "Verwijderen is mislukt.");
           }
           formMessage.textContent = "Donatie verwijderd.";
-          await Promise.all([loadAdminData(), loadLargeForms(), loadChangelog()]);
+          await Promise.all([loadAdminData(), loadLargeForms()]);
         } catch (error) {
           handleAuthError(error);
           formMessage.className = "message error";
@@ -1519,7 +1616,7 @@
             throw await httpError(response, "Formulier verwijderen is mislukt.");
           }
           largeFormsMessage.textContent = "Formulier verwijderd.";
-          await Promise.all([loadAdminData(), loadLargeForms(), loadChangelog()]);
+          await Promise.all([loadAdminData(), loadLargeForms()]);
         } catch (error) {
           handleAuthError(error);
           largeFormsMessage.className = "message error";
@@ -1538,7 +1635,7 @@
           goal = settingsState.GOAL_EUR;
           document.getElementById("summary-goal").textContent = currencyFormat.format(goal);
           settingsMessage.textContent = "Instellingen opgeslagen.";
-          await Promise.all([loadAdminData(), loadChangelog()]);
+          await loadAdminData();
         } catch (error) {
           handleAuthError(error);
           settingsMessage.className = "message error";
@@ -1697,7 +1794,6 @@
           await saveSettings(settingsState);
           renderActionsEditor(settingsState.ACTIONS);
           actionsMessage.textContent = "Acties opgeslagen. De publieke site gebruikt deze lijst nu.";
-          loadChangelog();
         } catch (error) {
           handleAuthError(error);
           actionsMessage.className = "message error";
