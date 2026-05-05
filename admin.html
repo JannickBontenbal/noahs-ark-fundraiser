@@ -991,6 +991,7 @@
         ACTIONS: normalizeActions(config.ACTIONS)
       };
       var currentDonations = [];
+      var currentLargeForms = [];
 
       document.getElementById("summary-goal").textContent = currencyFormat.format(goal);
       document.getElementById("password-form").addEventListener("submit", handlePassword);
@@ -1109,7 +1110,15 @@
         await Promise.all([loadSettingsForm(), loadAdminData(), loadLargeForms()]);
       }
 
-      async function handleLogout() {
+      async function handleLogout(event) {
+        var button = event ? event.currentTarget : document.getElementById("logout-button");
+        var originalButtonText = button ? button.textContent : "";
+        if (button) {
+          button.disabled = true;
+          button.textContent = "Uitloggen...";
+        }
+        await nextFrame();
+
         if (localPreview) {
           window.sessionStorage.removeItem("naf_admin_unlocked");
           window.sessionStorage.removeItem("naf_admin_name");
@@ -1136,6 +1145,10 @@
         stopPresence();
         app.classList.remove("is-visible");
         gate.style.display = "grid";
+        if (button) {
+          button.disabled = false;
+          button.textContent = originalButtonText;
+        }
       }
 
       async function syncCurrentUser() {
@@ -1432,7 +1445,8 @@
             throw await httpError(response, "Kon formulieren niet laden.");
           }
           var body = await response.json();
-          renderLargeForms(body.forms || []);
+          currentLargeForms = body.forms || [];
+          renderLargeForms(currentLargeForms);
           largeFormsMessage.textContent = "";
         } catch (error) {
           handleAuthError(error);
@@ -1481,7 +1495,7 @@
           button.type = "button";
           button.textContent = "Verwijder";
           button.addEventListener("click", function () {
-            deleteDonation(donation.id);
+            deleteDonation(donation.id, button);
           });
           deleteCell.appendChild(button);
           row.appendChild(deleteCell);
@@ -1531,7 +1545,7 @@
           deleteButton.type = "button";
           deleteButton.textContent = "Verwijder";
           deleteButton.addEventListener("click", function () {
-            deleteLargeForm(formRow.id);
+            deleteLargeForm(formRow.id, deleteButton);
           });
           deleteCell.appendChild(deleteButton);
           row.appendChild(deleteCell);
@@ -1617,12 +1631,20 @@
         }
       }
 
-      async function deleteDonation(id) {
+      async function deleteDonation(id, button) {
         if (!window.confirm("Deze donatie verwijderen?")) {
           return;
         }
 
+        formMessage.className = "message";
+        formMessage.textContent = "Donatie verwijderen...";
+        var originalButtonText = button ? button.textContent : "";
         try {
+          if (button) {
+            button.disabled = true;
+            button.textContent = "Verwijderen...";
+          }
+          await nextFrame();
           var response = await fetch(apiPath("/api/donations/" + encodeURIComponent(id)), {
             method: "DELETE",
             credentials: "include"
@@ -1630,21 +1652,38 @@
           if (!response.ok) {
             throw await httpError(response, "Verwijderen is mislukt.");
           }
+          currentDonations = currentDonations.filter(function (donation) {
+            return donation.id !== id;
+          });
+          renderRows(currentDonations);
+          renderSummary(currentDonations);
           formMessage.textContent = "Donatie verwijderd.";
-          await Promise.all([loadAdminData(), loadLargeForms()]);
+          loadLargeForms();
         } catch (error) {
           handleAuthError(error);
           formMessage.className = "message error";
           formMessage.textContent = error.message || "Verwijderen is mislukt.";
+          if (button) {
+            button.disabled = false;
+            button.textContent = originalButtonText;
+          }
         }
       }
 
-      async function deleteLargeForm(id) {
+      async function deleteLargeForm(id, button) {
         if (!window.confirm("Dit formulier en de gekoppelde donatie verwijderen?")) {
           return;
         }
 
+        largeFormsMessage.className = "message";
+        largeFormsMessage.textContent = "Formulier verwijderen...";
+        var originalButtonText = button ? button.textContent : "";
         try {
+          if (button) {
+            button.disabled = true;
+            button.textContent = "Verwijderen...";
+          }
+          await nextFrame();
           var response = await fetch(apiPath("/api/large-donation-forms/" + encodeURIComponent(id)), {
             method: "DELETE",
             credentials: "include"
@@ -1652,12 +1691,20 @@
           if (!response.ok) {
             throw await httpError(response, "Formulier verwijderen is mislukt.");
           }
+          currentLargeForms = currentLargeForms.filter(function (formRow) {
+            return formRow.id !== id;
+          });
+          renderLargeForms(currentLargeForms);
           largeFormsMessage.textContent = "Formulier verwijderd.";
-          await Promise.all([loadAdminData(), loadLargeForms()]);
+          loadAdminData();
         } catch (error) {
           handleAuthError(error);
           largeFormsMessage.className = "message error";
           largeFormsMessage.textContent = error.message || "Formulier verwijderen is mislukt.";
+          if (button) {
+            button.disabled = false;
+            button.textContent = originalButtonText;
+          }
         }
       }
 
