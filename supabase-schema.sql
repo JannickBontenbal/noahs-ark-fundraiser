@@ -3,6 +3,7 @@ create table if not exists public.donations (
   amount numeric not null check (amount > 0),
   donor_name text,
   note text,
+  created_by text,
   created_at timestamptz not null default now()
 );
 
@@ -15,6 +16,9 @@ on public.donations
 for select
 to anon, authenticated
 using (true);
+
+alter table public.donations
+add column if not exists created_by text;
 
 create table if not exists public.large_donation_forms (
   id uuid primary key default gen_random_uuid(),
@@ -33,6 +37,7 @@ create table if not exists public.large_donation_forms (
   description_primary text not null,
   description_secondary text,
   tax_year integer not null default 2027,
+  created_by text,
   created_at timestamptz not null default now()
 );
 
@@ -46,6 +51,40 @@ add column if not exists company_name text;
 
 alter table public.large_donation_forms
 add column if not exists contact_person text;
+
+alter table public.large_donation_forms
+add column if not exists created_by text;
+
+create table if not exists public.admin_changelog (
+  id uuid primary key default gen_random_uuid(),
+  admin_name text not null,
+  action text not null,
+  entity_type text not null,
+  entity_id text,
+  details text,
+  created_at timestamptz not null default now()
+);
+
+alter table public.admin_changelog enable row level security;
+
+create or replace function public.prevent_admin_changelog_mutation()
+returns trigger
+language plpgsql
+as $$
+begin
+  raise exception 'admin_changelog is append-only';
+end;
+$$;
+
+drop trigger if exists prevent_admin_changelog_update on public.admin_changelog;
+create trigger prevent_admin_changelog_update
+before update on public.admin_changelog
+for each row execute function public.prevent_admin_changelog_mutation();
+
+drop trigger if exists prevent_admin_changelog_delete on public.admin_changelog;
+create trigger prevent_admin_changelog_delete
+before delete on public.admin_changelog
+for each row execute function public.prevent_admin_changelog_mutation();
 
 insert into public.donations (amount, donor_name, note)
 values (25, 'Testdonateur', 'Controle')

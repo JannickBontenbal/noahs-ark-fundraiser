@@ -28,7 +28,7 @@ Copy `.env.example` to `.env` and fill the real values. Never commit `.env`.
 
 ## 3. Create the Supabase table
 
-Open Supabase SQL Editor and run the SQL in `supabase-schema.sql`. Re-run it after updates; it creates both `donations` and `large_donation_forms`.
+Open Supabase SQL Editor and run the SQL in `supabase-schema.sql`. Re-run it after updates; it creates `donations`, `large_donation_forms`, and the append-only `admin_changelog`.
 
 The publishable key is already filled in. For admin add/delete, also fill this line in `.env`:
 
@@ -53,7 +53,7 @@ http://localhost:5000/admin
 http://localhost:5000/grote-donatie.html
 ```
 
-Default admin password: `uganda2026`.
+The admin panel asks for your name plus the shared password. Your name is attached to new edits and shown in the read-only changelog.
 
 ## 5. Deploy free on Render
 

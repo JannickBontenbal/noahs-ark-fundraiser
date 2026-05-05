@@ -172,6 +172,38 @@ def admin_required():
     return None
 
 
+def current_admin_name():
+    return clean_text(session.get("admin_name"), 120) or "Admin"
+
+
+def log_admin_change(action, entity_type, entity_id=None, details=None, admin_name=None):
+    if not has_admin_config():
+        return
+
+    row = {
+        "admin_name": clean_text(admin_name, 120) or current_admin_name(),
+        "action": clean_text(action, 120),
+        "entity_type": clean_text(entity_type, 80),
+        "entity_id": clean_text(entity_id, 120) or None,
+        "details": clean_text(details, 700) or None,
+    }
+    try:
+        supabase_admin().table("admin_changelog").insert(row).execute()
+    except Exception as error:
+        print("Admin changelog insert failed:", error)
+
+
+def insert_with_optional_created_by(table_name, row):
+    try:
+        return supabase_admin().table(table_name).insert(row).execute()
+    except Exception as error:
+        if "created_by" not in row:
+            raise error
+        fallback = dict(row)
+        fallback.pop("created_by", None)
+        return supabase_admin().table(table_name).insert(fallback).execute()
+
+
 @app.get("/")
 @app.get("/index.html")
 def index():
@@ -218,7 +250,11 @@ def favicon():
 @app.post("/api/login")
 def login():
     payload = request.get_json(silent=True) or {}
+    admin_name = clean_text(payload.get("name"), 120)
     password = str(payload.get("password", ""))
+
+    if not admin_name:
+        return jsonify({"error": "Vul je naam in."}), 400
 
     if not ADMIN_PASSWORD_HASH:
         return jsonify({"error": "ADMIN_PASSWORD_HASH ontbreekt in .env."}), 500
@@ -227,13 +263,25 @@ def login():
         return jsonify({"error": "Wachtwoord klopt niet."}), 401
 
     session["admin"] = True
-    return jsonify({"ok": True})
+    session["admin_name"] = admin_name
+    log_admin_change("ingelogd", "session", details=admin_name + " opende het adminpaneel.")
+    return jsonify({"ok": True, "admin_name": admin_name})
 
 
 @app.post("/api/logout")
 def logout():
+    if session.get("admin"):
+        log_admin_change("uitgelogd", "session", details=current_admin_name() + " sloot het adminpaneel.")
     session.clear()
     return jsonify({"ok": True})
+
+
+@app.get("/api/me")
+def me():
+    blocked = admin_required()
+    if blocked:
+        return blocked
+    return jsonify({"admin_name": current_admin_name()})
 
 
 @app.get("/api/settings")
@@ -261,6 +309,12 @@ def update_settings():
     payload = request.get_json(silent=True) or {}
     
     settings = load_settings()
+    previous_settings = {
+        "GOAL_EUR": str(settings.get("GOAL_EUR", os.environ.get("GOAL_EUR", "10000"))),
+        "IBAN": settings.get("IBAN", os.environ.get("IBAN", "")),
+        "IBAN_NAME": settings.get("IBAN_NAME", os.environ.get("IBAN_NAME", "")),
+        "ACTIONS": normalize_actions(settings.get("ACTIONS", DEFAULT_ACTIONS)),
+    }
     settings.update({
         "GOAL_EUR": str(payload.get("GOAL_EUR", settings.get("GOAL_EUR", "10000"))),
         "IBAN": payload.get("IBAN", settings.get("IBAN", "")),
@@ -270,6 +324,21 @@ def update_settings():
     })
     
     if save_settings(settings):
+        changed = []
+        if previous_settings["GOAL_EUR"] != str(settings.get("GOAL_EUR", "")):
+            changed.append("doel")
+        if previous_settings["IBAN"] != settings.get("IBAN", ""):
+            changed.append("IBAN")
+        if previous_settings["IBAN_NAME"] != settings.get("IBAN_NAME", ""):
+            changed.append("rekeninghouder")
+        if previous_settings["ACTIONS"] != settings.get("ACTIONS", []):
+            changed.append("lopende acties")
+        if changed:
+            log_admin_change(
+                "bijgewerkt",
+                "settings",
+                details=current_admin_name() + " wijzigde " + ", ".join(changed) + ".",
+            )
         return jsonify({"ok": True})
     else:
         return jsonify({"error": "Kon instellingen niet opslaan."}), 500
@@ -284,13 +353,22 @@ def list_donations():
     if not has_supabase_config():
         return jsonify({"error": "SUPABASE_SERVICE_KEY ontbreekt in .env."}), 500
 
-    response = (
-        supabase_admin()
-        .table("donations")
-        .select("id, amount, donor_name, note, created_at")
-        .order("created_at", desc=True)
-        .execute()
-    )
+    try:
+        response = (
+            supabase_admin()
+            .table("donations")
+            .select("id, amount, donor_name, note, created_at, created_by")
+            .order("created_at", desc=True)
+            .execute()
+        )
+    except Exception:
+        response = (
+            supabase_admin()
+            .table("donations")
+            .select("id, amount, donor_name, note, created_at")
+            .order("created_at", desc=True)
+            .execute()
+        )
     return jsonify({"donations": response.data or []})
 
 
@@ -318,9 +396,17 @@ def add_donation():
         "amount": amount,
         "donor_name": payload.get("donor_name") or None,
         "note": payload.get("note") or None,
+        "created_by": current_admin_name(),
     }
-    response = supabase_admin().table("donations").insert(row).execute()
-    return jsonify({"donation": response.data[0] if response.data else row}), 201
+    response = insert_with_optional_created_by("donations", row)
+    donation = response.data[0] if response.data else row
+    log_admin_change(
+        "donatie toegevoegd",
+        "donation",
+        donation.get("id"),
+        current_admin_name() + " voegde " + str(amount) + " EUR toe voor " + (row["donor_name"] or "Anoniem") + ".",
+    )
+    return jsonify({"donation": donation}), 201
 
 
 @app.post("/api/large-donation-forms")
@@ -363,9 +449,10 @@ def create_large_donation_form():
         "amount": amount,
         "donor_name": donor_name,
         "note": "Groot bedrag formulier 2027: " + description_primary,
+        "created_by": "Website formulier",
     }
     try:
-        donation_response = supabase_admin().table("donations").insert(donation_row).execute()
+        donation_response = insert_with_optional_created_by("donations", donation_row)
     except Exception as error:
         return jsonify({"error": "Kon donatie niet opslaan. Controleer Supabase en SUPABASE_SERVICE_KEY. " + str(error)}), 500
     donation = donation_response.data[0] if donation_response.data else donation_row
@@ -387,16 +474,24 @@ def create_large_donation_form():
         "description_primary": description_primary,
         "description_secondary": clean_text(payload.get("description_secondary"), 220) or "Guido de Bres Uganda reis 2027",
         "tax_year": 2027,
+        "created_by": "Website formulier",
     }
 
     try:
-        form_response = supabase_admin().table("large_donation_forms").insert(form_row).execute()
+        form_response = insert_with_optional_created_by("large_donation_forms", form_row)
     except Exception as error:
         if donation_id:
             supabase_admin().table("donations").delete().eq("id", donation_id).execute()
         return jsonify({"error": "Kon formulier niet opslaan. Run supabase-schema.sql opnieuw in Supabase. " + str(error)}), 500
 
     created = form_response.data[0] if form_response.data else form_row
+    log_admin_change(
+        "formulier voltooid",
+        "large_donation_form",
+        created.get("id"),
+        donor_name + " vulde een groot-bedrag formulier in voor " + str(amount) + " EUR.",
+        admin_name="Website formulier",
+    )
     return jsonify({
         "form": created,
         "donation": donation,
@@ -459,7 +554,7 @@ def delete_large_donation_form(form_id):
     response = (
         supabase_admin()
         .table("large_donation_forms")
-        .select("id, donation_id")
+        .select("id, donation_id, amount, donor_name, company_name, donor_type")
         .eq("id", form_id)
         .limit(1)
         .execute()
@@ -468,10 +563,17 @@ def delete_large_donation_form(form_id):
         return jsonify({"error": "Formulier niet gevonden."}), 404
 
     donation_id = response.data[0].get("donation_id")
+    form_row = response.data[0]
     if donation_id:
         supabase_admin().table("donations").delete().eq("id", donation_id).execute()
     else:
         supabase_admin().table("large_donation_forms").delete().eq("id", form_id).execute()
+    log_admin_change(
+        "formulier verwijderd",
+        "large_donation_form",
+        form_id,
+        current_admin_name() + " verwijderde formulier van " + (form_row.get("company_name") or form_row.get("donor_name") or "Onbekend") + ".",
+    )
     return jsonify({"ok": True})
 
 
@@ -603,8 +705,46 @@ def delete_donation(donation_id):
     if not has_admin_config():
         return jsonify({"error": "SUPABASE_SERVICE_KEY ontbreekt in .env."}), 500
 
+    response = (
+        supabase_admin()
+        .table("donations")
+        .select("id, amount, donor_name")
+        .eq("id", donation_id)
+        .limit(1)
+        .execute()
+    )
+    donation = response.data[0] if response.data else {}
     supabase_admin().table("donations").delete().eq("id", donation_id).execute()
+    log_admin_change(
+        "donatie verwijderd",
+        "donation",
+        donation_id,
+        current_admin_name() + " verwijderde " + str(donation.get("amount", "")) + " EUR van " + (donation.get("donor_name") or "Anoniem") + ".",
+    )
     return jsonify({"ok": True})
+
+
+@app.get("/api/changelog")
+def list_changelog():
+    blocked = admin_required()
+    if blocked:
+        return blocked
+
+    if not has_admin_config():
+        return jsonify({"error": "SUPABASE_SERVICE_KEY ontbreekt in .env."}), 500
+
+    try:
+        response = (
+            supabase_admin()
+            .table("admin_changelog")
+            .select("id, admin_name, action, entity_type, entity_id, details, created_at")
+            .order("created_at", desc=True)
+            .limit(80)
+            .execute()
+        )
+    except Exception as error:
+        return jsonify({"error": "Kon changelog niet laden. Run supabase-schema.sql opnieuw in Supabase. " + str(error)}), 500
+    return jsonify({"changes": response.data or []})
 
 
 @app.get("/api/health")

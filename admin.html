@@ -241,6 +241,30 @@
       justify-content: end;
     }
 
+    .user-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      min-height: 44px;
+      padding: 0 14px;
+      border: 1px solid var(--border);
+      border-radius: 999px;
+      background: rgba(255, 248, 232, 0.08);
+      color: var(--text-primary);
+      font-family: var(--mono);
+      font-size: 10px;
+      font-weight: 700;
+      text-transform: uppercase;
+    }
+
+    .presence-dot {
+      width: 9px;
+      height: 9px;
+      border-radius: 999px;
+      background: var(--accent);
+      box-shadow: 0 0 0 4px rgba(217, 255, 63, 0.14);
+    }
+
     .admin-wrap {
       width: min(100%, var(--max-width));
       margin: 0 auto;
@@ -491,7 +515,7 @@
 
     table {
       width: 100%;
-      min-width: 760px;
+      min-width: 900px;
       border-collapse: collapse;
     }
 
@@ -522,6 +546,61 @@
       display: grid;
       gap: 24px;
       margin-top: 24px;
+    }
+
+    .collab-strip {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      align-items: center;
+      margin: -10px 0 30px;
+      color: var(--text-muted);
+      font-weight: 700;
+    }
+
+    .collab-strip strong {
+      color: var(--accent);
+      font-family: var(--mono);
+      font-size: 11px;
+      text-transform: uppercase;
+    }
+
+    .changelog-panel[hidden] {
+      display: none;
+    }
+
+    .change-list {
+      display: grid;
+      gap: 10px;
+    }
+
+    .change-item {
+      display: grid;
+      gap: 6px;
+      padding: 14px;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      background: rgba(255, 248, 232, 0.06);
+    }
+
+    .change-meta {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      align-items: center;
+      color: var(--text-muted);
+      font-family: var(--mono);
+      font-size: 10px;
+      font-weight: 700;
+      text-transform: uppercase;
+    }
+
+    .change-author {
+      width: fit-content;
+      padding: 4px 7px;
+      border-radius: 999px;
+      background: var(--accent);
+      color: var(--ink);
     }
 
     .actions-editor {
@@ -584,7 +663,8 @@
       }
 
       .button,
-      .top-actions .button {
+      .top-actions .button,
+      .top-actions .user-pill {
         width: 100%;
       }
 
@@ -611,6 +691,10 @@
       <h1 id="gate-title">Campagne beheren</h1>
       <p class="muted">Log in om donaties, instellingen en lopende acties bij te werken.</p>
       <div class="field">
+        <label for="admin-name" style="color: var(--ink);">Jouw naam</label>
+        <input id="admin-name" type="text" autocomplete="name" placeholder="Bijv. Janni" required>
+      </div>
+      <div class="field">
         <label for="password" style="color: var(--ink);">Wachtwoord</label>
         <input id="password" type="password" autocomplete="current-password" required>
       </div>
@@ -629,6 +713,8 @@
         <span>x Noah's Ark admin</span>
       </a>
       <div class="top-actions">
+        <span class="user-pill"><span class="presence-dot"></span><span id="active-user">Ingelogd</span></span>
+        <button class="button" type="button" id="changelog-toggle">Changelog</button>
         <a class="button" href="#large-forms-panel">Formulieren</a>
         <button class="button" type="button" id="refresh-button">Vernieuwen</button>
         <button class="button danger" type="button" id="logout-button">Uitloggen</button>
@@ -643,6 +729,11 @@
         </div>
         <p class="hero-note">Handmatige invoer voor giften, campagnegegevens en de acties die op de publieke site verschijnen.</p>
       </section>
+
+      <div class="collab-strip" aria-live="polite">
+        <strong>Live samenwerking</strong>
+        <span>Nieuwe wijzigingen worden met je naam vastgelegd, zodat het team kan zien wie wat heeft aangepast.</span>
+      </div>
 
       <section class="summary" aria-label="Samenvatting">
         <div class="summary-item acid">
@@ -708,12 +799,13 @@
                   <th>Naam</th>
                   <th>Bedrag</th>
                   <th>Notitie</th>
+                  <th>Door</th>
                   <th>Verwijder</th>
                 </tr>
               </thead>
               <tbody id="donations-body">
                 <tr>
-                  <td class="empty-row" colspan="5">Nog geen data geladen.</td>
+                  <td class="empty-row" colspan="6">Nog geen data geladen.</td>
                 </tr>
               </tbody>
             </table>
@@ -722,6 +814,22 @@
       </div>
 
       <div class="section-stack">
+        <section class="panel changelog-panel" id="changelog-panel" aria-labelledby="changelog-heading" hidden>
+          <div class="panel-head">
+            <div>
+              <p class="kicker">Alleen lezen</p>
+              <h2 id="changelog-heading">Changelog</h2>
+            </div>
+            <button class="button" type="button" id="changelog-close">Sluiten</button>
+          </div>
+          <div class="panel-body">
+            <div class="change-list" id="changelog-body">
+              <p class="empty-row">Nog geen wijzigingen geladen.</p>
+            </div>
+            <p class="message" id="changelog-message" aria-live="polite"></p>
+          </div>
+        </section>
+
         <section class="panel" id="large-forms-panel" aria-labelledby="large-forms-heading">
           <div class="panel-head">
             <div>
@@ -738,13 +846,14 @@
                   <th>Naam</th>
                   <th>Bedrag</th>
                   <th>Omschrijving</th>
+                  <th>Door</th>
                   <th>PDF</th>
                   <th>Verwijder</th>
                 </tr>
               </thead>
               <tbody id="large-forms-body">
                 <tr>
-                  <td class="empty-row" colspan="7">Nog geen formulieren geladen.</td>
+                  <td class="empty-row" colspan="8">Nog geen formulieren geladen.</td>
                 </tr>
               </tbody>
             </table>
@@ -818,6 +927,7 @@
       config = Object.assign({}, config, loadLocalSettings());
       var goal = Number(config.GOAL_EUR || 10000);
       var adminApiUrl = cleanUrl(config.ADMIN_API_URL || "");
+      var currentAdminName = window.sessionStorage.getItem("naf_admin_name") || "";
       var currencyFormat = new Intl.NumberFormat("nl-NL", {
         style: "currency",
         currency: "EUR",
@@ -831,9 +941,13 @@
       var settingsMessage = document.getElementById("settings-message");
       var actionsMessage = document.getElementById("actions-message");
       var largeFormsMessage = document.getElementById("large-forms-message");
+      var changelogMessage = document.getElementById("changelog-message");
       var donationsBody = document.getElementById("donations-body");
       var largeFormsBody = document.getElementById("large-forms-body");
+      var changelogBody = document.getElementById("changelog-body");
       var actionsEditor = document.getElementById("actions-editor");
+      var activeUser = document.getElementById("active-user");
+      var changelogPanel = document.getElementById("changelog-panel");
       var settingsState = {
         GOAL_EUR: goal,
         IBAN: config.IBAN || "",
@@ -849,8 +963,13 @@
       document.getElementById("add-action-button").addEventListener("click", addAction);
       document.getElementById("refresh-button").addEventListener("click", refreshAll);
       document.getElementById("logout-button").addEventListener("click", handleLogout);
+      document.getElementById("changelog-toggle").addEventListener("click", toggleChangelog);
+      document.getElementById("changelog-close").addEventListener("click", function () {
+        changelogPanel.hidden = true;
+      });
 
       if (window.sessionStorage.getItem("naf_admin_unlocked") === "true") {
+        setActiveUser(currentAdminName || "Admin");
         unlock();
       }
 
@@ -865,9 +984,16 @@
       async function handlePassword(event) {
         event.preventDefault();
         gateMessage.textContent = "";
+        var adminName = document.getElementById("admin-name").value.trim();
+        if (!adminName) {
+          gateMessage.textContent = "Vul je naam in.";
+          return;
+        }
 
         if (localPreview) {
           window.sessionStorage.setItem("naf_admin_unlocked", "true");
+          window.sessionStorage.setItem("naf_admin_name", adminName);
+          setActiveUser(adminName);
           unlock();
           return;
         }
@@ -877,7 +1003,10 @@
             method: "POST",
             credentials: "include",
             headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ password: document.getElementById("password").value })
+            body: JSON.stringify({
+              name: adminName,
+              password: document.getElementById("password").value
+            })
           });
 
           if (!response.ok) {
@@ -885,6 +1014,9 @@
           }
 
           window.sessionStorage.setItem("naf_admin_unlocked", "true");
+          var body = await response.json();
+          window.sessionStorage.setItem("naf_admin_name", body.admin_name || adminName);
+          setActiveUser(body.admin_name || adminName);
           unlock();
         } catch (error) {
           gateMessage.textContent = error.message || "Kon de Python admin API niet bereiken.";
@@ -894,6 +1026,7 @@
       function unlock() {
         gate.style.display = "none";
         app.classList.add("is-visible");
+        syncCurrentUser();
         refreshAll();
       }
 
@@ -902,14 +1035,16 @@
           loadSettingsForm();
           loadAdminData();
           loadLargeForms();
+          loadChangelog();
           return;
         }
-        await Promise.all([loadSettingsForm(), loadAdminData(), loadLargeForms()]);
+        await Promise.all([loadSettingsForm(), loadAdminData(), loadLargeForms(), loadChangelog()]);
       }
 
       async function handleLogout() {
         if (localPreview) {
           window.sessionStorage.removeItem("naf_admin_unlocked");
+          window.sessionStorage.removeItem("naf_admin_name");
           app.classList.remove("is-visible");
           gate.style.display = "grid";
           return;
@@ -924,8 +1059,45 @@
           console.error(error);
         }
         window.sessionStorage.removeItem("naf_admin_unlocked");
+        window.sessionStorage.removeItem("naf_admin_name");
         app.classList.remove("is-visible");
         gate.style.display = "grid";
+      }
+
+      async function syncCurrentUser() {
+        setActiveUser(window.sessionStorage.getItem("naf_admin_name") || "Admin");
+        if (localPreview) {
+          return;
+        }
+
+        try {
+          var response = await fetch(apiPath("/api/me"), {
+            credentials: "include"
+          });
+          if (!response.ok) {
+            return;
+          }
+          var body = await response.json();
+          if (body.admin_name) {
+            window.sessionStorage.setItem("naf_admin_name", body.admin_name);
+            setActiveUser(body.admin_name);
+          }
+        } catch (error) {
+          console.error(error);
+        }
+      }
+
+      function setActiveUser(name) {
+        currentAdminName = name || "Admin";
+        activeUser.textContent = "Bewerkt als " + currentAdminName;
+      }
+
+      function toggleChangelog() {
+        changelogPanel.hidden = !changelogPanel.hidden;
+        if (!changelogPanel.hidden) {
+          changelogPanel.scrollIntoView({ behavior: "smooth", block: "start" });
+          loadChangelog();
+        }
       }
 
       async function loadSettingsForm() {
@@ -1032,6 +1204,38 @@
         }
       }
 
+      async function loadChangelog() {
+        if (localPreview) {
+          renderChangelog([{
+            admin_name: currentAdminName || "Preview",
+            action: "preview geopend",
+            entity_type: "local",
+            details: "Lokale preview schrijft geen echte changelog.",
+            created_at: new Date().toISOString()
+          }]);
+          changelogMessage.textContent = "Lokale previewmodus.";
+          return;
+        }
+
+        try {
+          changelogMessage.className = "message";
+          changelogMessage.textContent = "Changelog laden...";
+          var response = await fetch(apiPath("/api/changelog"), {
+            credentials: "include"
+          });
+          if (!response.ok) {
+            throw await httpError(response, "Kon changelog niet laden.");
+          }
+          var body = await response.json();
+          renderChangelog(body.changes || []);
+          changelogMessage.textContent = "";
+        } catch (error) {
+          handleAuthError(error);
+          changelogMessage.className = "message error";
+          changelogMessage.textContent = error.message || "Kon changelog niet laden.";
+        }
+      }
+
       function renderSummary(rows) {
         var total = rows.reduce(function (sum, donation) {
           return sum + (Number(donation.amount) || 0);
@@ -1051,7 +1255,7 @@
           var emptyRow = document.createElement("tr");
           var emptyCell = document.createElement("td");
           emptyCell.className = "empty-row";
-          emptyCell.colSpan = 5;
+          emptyCell.colSpan = 6;
           emptyCell.textContent = "Nog geen donaties.";
           emptyRow.appendChild(emptyCell);
           donationsBody.appendChild(emptyRow);
@@ -1064,6 +1268,7 @@
           row.appendChild(cell(donation.donor_name || "Anoniem", !donation.donor_name));
           row.appendChild(cell(currencyFormat.format(Number(donation.amount) || 0)));
           row.appendChild(cell(donation.note || "", !donation.note));
+          row.appendChild(cell(donation.created_by || "Onbekend", !donation.created_by));
 
           var deleteCell = document.createElement("td");
           var button = document.createElement("button");
@@ -1086,7 +1291,7 @@
           var emptyRow = document.createElement("tr");
           var emptyCell = document.createElement("td");
           emptyCell.className = "empty-row";
-          emptyCell.colSpan = 7;
+          emptyCell.colSpan = 8;
           emptyCell.textContent = "Nog geen grote-bedrag formulieren.";
           emptyRow.appendChild(emptyCell);
           largeFormsBody.appendChild(emptyRow);
@@ -1103,6 +1308,7 @@
           row.appendChild(cell(displayName));
           row.appendChild(cell(currencyFormat.format(Number(formRow.amount) || 0)));
           row.appendChild(cell(formRow.description_primary || ""));
+          row.appendChild(cell(formRow.created_by || "Website formulier", !formRow.created_by));
 
           var pdfCell = document.createElement("td");
           var link = document.createElement("a");
@@ -1125,6 +1331,50 @@
           deleteCell.appendChild(deleteButton);
           row.appendChild(deleteCell);
           largeFormsBody.appendChild(row);
+        });
+      }
+
+      function renderChangelog(rows) {
+        changelogBody.innerHTML = "";
+
+        if (!rows.length) {
+          var empty = document.createElement("p");
+          empty.className = "empty-row";
+          empty.textContent = "Nog geen wijzigingen.";
+          changelogBody.appendChild(empty);
+          return;
+        }
+
+        rows.forEach(function (change) {
+          var item = document.createElement("article");
+          item.className = "change-item";
+
+          var meta = document.createElement("div");
+          meta.className = "change-meta";
+
+          var author = document.createElement("span");
+          author.className = "change-author";
+          author.textContent = change.admin_name || "Admin";
+          meta.appendChild(author);
+
+          var action = document.createElement("span");
+          action.textContent = change.action || "wijziging";
+          meta.appendChild(action);
+
+          var type = document.createElement("span");
+          type.textContent = change.entity_type || "admin";
+          meta.appendChild(type);
+
+          var date = document.createElement("span");
+          date.textContent = formatDate(change.created_at);
+          meta.appendChild(date);
+
+          var details = document.createElement("p");
+          details.textContent = change.details || "Geen extra details.";
+
+          item.appendChild(meta);
+          item.appendChild(details);
+          changelogBody.appendChild(item);
         });
       }
 
@@ -1185,7 +1435,7 @@
 
           form.reset();
           formMessage.textContent = "Donatie toegevoegd.";
-          await loadAdminData();
+          await Promise.all([loadAdminData(), loadChangelog()]);
         } catch (error) {
           handleAuthError(error);
           formMessage.className = "message error";
@@ -1209,7 +1459,7 @@
             throw await httpError(response, "Verwijderen is mislukt.");
           }
           formMessage.textContent = "Donatie verwijderd.";
-          await Promise.all([loadAdminData(), loadLargeForms()]);
+          await Promise.all([loadAdminData(), loadLargeForms(), loadChangelog()]);
         } catch (error) {
           handleAuthError(error);
           formMessage.className = "message error";
@@ -1231,7 +1481,7 @@
             throw await httpError(response, "Formulier verwijderen is mislukt.");
           }
           largeFormsMessage.textContent = "Formulier verwijderd.";
-          await Promise.all([loadAdminData(), loadLargeForms()]);
+          await Promise.all([loadAdminData(), loadLargeForms(), loadChangelog()]);
         } catch (error) {
           handleAuthError(error);
           largeFormsMessage.className = "message error";
@@ -1250,7 +1500,7 @@
           goal = settingsState.GOAL_EUR;
           document.getElementById("summary-goal").textContent = currencyFormat.format(goal);
           settingsMessage.textContent = "Instellingen opgeslagen.";
-          await loadAdminData();
+          await Promise.all([loadAdminData(), loadChangelog()]);
         } catch (error) {
           handleAuthError(error);
           settingsMessage.className = "message error";
@@ -1368,6 +1618,7 @@
           await saveSettings(settingsState);
           renderActionsEditor(settingsState.ACTIONS);
           actionsMessage.textContent = "Acties opgeslagen. De publieke site gebruikt deze lijst nu.";
+          await loadChangelog();
         } catch (error) {
           handleAuthError(error);
           actionsMessage.className = "message error";
