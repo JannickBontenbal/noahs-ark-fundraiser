@@ -308,14 +308,20 @@ def current_admin_session_id():
     return session["admin_session_id"]
 
 
-def color_for_admin(name, session_id=""):
-    source = (name or "") + (session_id or "")
+def current_admin_device_id():
+    if not session.get("admin_device_id"):
+        session["admin_device_id"] = str(uuid.uuid4())
+    return session["admin_device_id"]
+
+
+def color_for_admin(name, device_id=""):
+    source = (name or "") + (device_id or "")
     index = int(hashlib.sha256(source.encode("utf-8")).hexdigest(), 16) % len(PRESENCE_COLORS)
     return PRESENCE_COLORS[index]
 
 
-def choose_presence_color(name, session_id):
-    preferred = color_for_admin(name, session_id)
+def choose_presence_color(name, device_id):
+    preferred = color_for_admin(name, device_id)
     if not has_admin_config():
         return preferred
 
@@ -326,14 +332,18 @@ def choose_presence_color(name, session_id):
         response = (
             supabase_admin()
             .table("admin_presence")
-            .select("admin_color")
+            .select("admin_color, device_id")
             .gte("last_seen", stale_before)
             .execute()
         )
     except Exception:
         return preferred
 
-    used = {row.get("admin_color") for row in (response.data or []) if row.get("admin_color")}
+    used = {
+        row.get("admin_color")
+        for row in (response.data or [])
+        if row.get("admin_color") and row.get("device_id") != device_id
+    }
     if preferred not in used:
         return preferred
     for color in PRESENCE_COLORS:
@@ -344,7 +354,7 @@ def choose_presence_color(name, session_id):
 
 def current_admin_color():
     if not session.get("admin_color"):
-        session["admin_color"] = color_for_admin(current_admin_name(), current_admin_session_id())
+        session["admin_color"] = color_for_admin(current_admin_name(), current_admin_device_id())
     return session["admin_color"]
 
 
@@ -429,6 +439,7 @@ def favicon():
 def login():
     payload = request.get_json(silent=True) or {}
     admin_name = clean_text(payload.get("name"), 120)
+    device_id = clean_text(payload.get("device_id"), 120) or str(uuid.uuid4())
     password = str(payload.get("password", ""))
 
     if not admin_name:
@@ -443,22 +454,32 @@ def login():
     session["admin"] = True
     session["admin_name"] = admin_name
     session["admin_session_id"] = str(uuid.uuid4())
-    session["admin_color"] = choose_presence_color(admin_name, session["admin_session_id"])
+    session["admin_device_id"] = device_id
+    session["admin_color"] = choose_presence_color(admin_name, device_id)
+    if has_admin_config():
+        try:
+            supabase_admin().table("admin_presence").delete().eq("device_id", device_id).execute()
+        except Exception as error:
+            print("Admin presence device cleanup failed:", error)
     log_admin_change("ingelogd", "session", details=admin_name + " opende het adminpaneel.")
     return jsonify({
         "ok": True,
         "admin_name": admin_name,
         "admin_color": session["admin_color"],
         "admin_session_id": session["admin_session_id"],
+        "admin_device_id": session["admin_device_id"],
     })
 
 
 @app.post("/api/logout")
 def logout():
     if session.get("admin"):
-        if has_admin_config() and session.get("admin_session_id"):
+        if has_admin_config() and (session.get("admin_device_id") or session.get("admin_session_id")):
             try:
-                supabase_admin().table("admin_presence").delete().eq("session_id", session["admin_session_id"]).execute()
+                if session.get("admin_device_id"):
+                    supabase_admin().table("admin_presence").delete().eq("device_id", session["admin_device_id"]).execute()
+                else:
+                    supabase_admin().table("admin_presence").delete().eq("session_id", session["admin_session_id"]).execute()
             except Exception as error:
                 print("Admin presence cleanup failed:", error)
         log_admin_change("uitgelogd", "session", details=current_admin_name() + " sloot het adminpaneel.")
@@ -475,6 +496,7 @@ def me():
         "admin_name": current_admin_name(),
         "admin_color": current_admin_color(),
         "admin_session_id": current_admin_session_id(),
+        "admin_device_id": current_admin_device_id(),
     })
 
 
@@ -491,10 +513,15 @@ def update_presence():
 
     payload = request.get_json(silent=True) or {}
     section = clean_text(payload.get("section"), 80) or "Dashboard"
+    device_id = clean_text(payload.get("device_id"), 120) or current_admin_device_id()
+    if session.get("admin_device_id") != device_id:
+        session["admin_color"] = choose_presence_color(current_admin_name(), device_id)
+    session["admin_device_id"] = device_id
     now = datetime.now(timezone.utc)
     stale_before = (now - timedelta(seconds=45)).isoformat()
     row = {
         "session_id": current_admin_session_id(),
+        "device_id": current_admin_device_id(),
         "admin_name": current_admin_name(),
         "admin_color": current_admin_color(),
         "section": section,
@@ -503,7 +530,7 @@ def update_presence():
 
     try:
         supabase_admin().table("admin_presence").delete().lt("last_seen", stale_before).execute()
-        supabase_admin().table("admin_presence").upsert(row, on_conflict="session_id").execute()
+        supabase_admin().table("admin_presence").upsert(row, on_conflict="device_id").execute()
     except Exception as error:
         return jsonify({"error": "Kon online gebruikers niet bijwerken. Run supabase-schema.sql opnieuw in Supabase. " + str(error)}), 500
 
@@ -527,7 +554,7 @@ def list_presence():
         response = (
             supabase_admin()
             .table("admin_presence")
-            .select("session_id, admin_name, admin_color, section, last_seen")
+            .select("session_id, device_id, admin_name, admin_color, section, last_seen")
             .gte("last_seen", stale_before)
             .order("last_seen", desc=True)
             .execute()
@@ -537,6 +564,7 @@ def list_presence():
 
     return jsonify({
         "current_session_id": current_admin_session_id(),
+        "current_device_id": current_admin_device_id(),
         "users": response.data or [],
     })
 

@@ -69,6 +69,7 @@ alter table public.admin_changelog enable row level security;
 
 create table if not exists public.admin_presence (
   session_id text primary key,
+  device_id text not null default gen_random_uuid()::text,
   admin_name text not null,
   admin_color text not null,
   section text not null default 'Dashboard',
@@ -78,6 +79,9 @@ create table if not exists public.admin_presence (
 alter table public.admin_presence enable row level security;
 
 alter table public.admin_presence
+add column if not exists device_id text not null default gen_random_uuid()::text;
+
+alter table public.admin_presence
 add column if not exists admin_color text not null default '#d9ff3f';
 
 alter table public.admin_presence
@@ -85,6 +89,9 @@ add column if not exists section text not null default 'Dashboard';
 
 alter table public.admin_presence
 add column if not exists last_seen timestamptz not null default now();
+
+create unique index if not exists admin_presence_device_id_key
+on public.admin_presence (device_id);
 
 create or replace function public.prevent_admin_changelog_mutation()
 returns trigger

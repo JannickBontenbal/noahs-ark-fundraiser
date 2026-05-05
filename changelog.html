@@ -383,6 +383,7 @@
       var timeline = document.getElementById("timeline");
       var activeUser = document.getElementById("active-user");
       var viewedLogged = false;
+      var deviceId = getDeviceId();
 
       document.getElementById("login-form").addEventListener("submit", handleLogin);
       document.getElementById("refresh-button").addEventListener("click", loadChangelog);
@@ -395,6 +396,23 @@
 
       function apiPath(path) {
         return (adminApiUrl || "") + path;
+      }
+
+      function getDeviceId() {
+        var key = "naf_admin_device_id";
+        try {
+          var existing = window.localStorage.getItem(key);
+          if (existing) {
+            return existing;
+          }
+          var next = window.crypto && window.crypto.randomUUID
+            ? window.crypto.randomUUID()
+            : "device-" + Date.now() + "-" + Math.random().toString(16).slice(2);
+          window.localStorage.setItem(key, next);
+          return next;
+        } catch (error) {
+          return "device-" + Date.now() + "-" + Math.random().toString(16).slice(2);
+        }
       }
 
       async function bootstrap() {
@@ -423,6 +441,7 @@
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({
               name: document.getElementById("admin-name").value.trim(),
+              device_id: deviceId,
               password: document.getElementById("password").value
             })
           });

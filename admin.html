@@ -962,6 +962,7 @@
       var currentAdminName = window.sessionStorage.getItem("naf_admin_name") || "";
       var currentAdminColor = window.sessionStorage.getItem("naf_admin_color") || "#d9ff3f";
       var currentAdminSessionId = window.sessionStorage.getItem("naf_admin_session_id") || "";
+      var currentAdminDeviceId = getDeviceId();
       var currentPresenceSection = "Dashboard";
       var presenceTimer = null;
       var presencePollTimer = null;
@@ -1022,6 +1023,23 @@
         });
       }
 
+      function getDeviceId() {
+        var key = "naf_admin_device_id";
+        try {
+          var existing = window.localStorage.getItem(key);
+          if (existing) {
+            return existing;
+          }
+          var next = window.crypto && window.crypto.randomUUID
+            ? window.crypto.randomUUID()
+            : "device-" + Date.now() + "-" + Math.random().toString(16).slice(2);
+          window.localStorage.setItem(key, next);
+          return next;
+        } catch (error) {
+          return "device-" + Date.now() + "-" + Math.random().toString(16).slice(2);
+        }
+      }
+
       async function handlePassword(event) {
         event.preventDefault();
         gateMessage.textContent = "";
@@ -1046,6 +1064,7 @@
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({
               name: adminName,
+              device_id: currentAdminDeviceId,
               password: document.getElementById("password").value
             })
           });
@@ -1059,6 +1078,10 @@
           window.sessionStorage.setItem("naf_admin_name", body.admin_name || adminName);
           window.sessionStorage.setItem("naf_admin_color", body.admin_color || currentAdminColor);
           window.sessionStorage.setItem("naf_admin_session_id", body.admin_session_id || "");
+          if (body.admin_device_id) {
+            currentAdminDeviceId = body.admin_device_id;
+            window.localStorage.setItem("naf_admin_device_id", currentAdminDeviceId);
+          }
           currentAdminColor = body.admin_color || currentAdminColor;
           currentAdminSessionId = body.admin_session_id || "";
           setActiveUser(body.admin_name || adminName);
@@ -1133,6 +1156,10 @@
             window.sessionStorage.setItem("naf_admin_name", body.admin_name);
             window.sessionStorage.setItem("naf_admin_color", body.admin_color || currentAdminColor);
             window.sessionStorage.setItem("naf_admin_session_id", body.admin_session_id || currentAdminSessionId);
+            if (body.admin_device_id) {
+              currentAdminDeviceId = body.admin_device_id;
+              window.localStorage.setItem("naf_admin_device_id", currentAdminDeviceId);
+            }
             currentAdminColor = body.admin_color || currentAdminColor;
             currentAdminSessionId = body.admin_session_id || currentAdminSessionId;
             setActiveUser(body.admin_name);
@@ -1191,13 +1218,16 @@
             method: "POST",
             credentials: "include",
             headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ section: currentPresenceSection })
+            body: JSON.stringify({
+              section: currentPresenceSection,
+              device_id: currentAdminDeviceId
+            })
           });
           if (!response.ok) {
             return;
           }
           var body = await response.json();
-          renderPresence(body.users || [], body.current_session_id);
+          renderPresence(body.users || [], body.current_session_id, body.current_device_id);
         } catch (error) {
           console.error(error);
         }
@@ -1216,16 +1246,23 @@
             return;
           }
           var body = await response.json();
-          renderPresence(body.users || [], body.current_session_id);
+          renderPresence(body.users || [], body.current_session_id, body.current_device_id);
         } catch (error) {
           console.error(error);
         }
       }
 
-      function renderPresence(users, currentSessionId) {
+      function renderPresence(users, currentSessionId, currentDeviceId) {
         var ownSession = currentSessionId || currentAdminSessionId;
+        var ownDevice = currentDeviceId || currentAdminDeviceId;
+        var seenDevices = {};
         var others = users.filter(function (user) {
-          return user.session_id !== ownSession;
+          var device = user.device_id || user.session_id;
+          if (user.session_id === ownSession || device === ownDevice || seenDevices[device]) {
+            return false;
+          }
+          seenDevices[device] = true;
+          return true;
         });
         presenceTray.innerHTML = "";
         clearPresenceHighlights();
