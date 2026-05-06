@@ -1528,6 +1528,10 @@
       margin-top: 4px;
     }
 
+    .large-transfer-action[hidden] {
+      display: none;
+    }
+
     .large-transfer-row {
       display: flex;
       justify-content: center;
@@ -2307,7 +2311,7 @@
           </div>
           <p class="modal-copy">De knop opent de offici&euml;le GoFundMe betaalpagina voor deze actie.</p>
         </div>
-        <div class="large-transfer-action">
+        <div class="large-transfer-action" data-large-transfer-action>
           <div class="large-transfer-row">
             <a class="button large-transfer-button" href="grote-donatie.html">Groot bedrag overmaken?</a>
             <button class="info-icon" type="button" aria-label="Informatie over grote bedragen" data-tooltip="Voor grote bedragen raden wij aan om het direct over te maken op de IBAN van Noah's Ark. Het formulier is vooral voor onze administratie en om de teller goed bij te houden.">i</button>
@@ -2328,6 +2332,7 @@
       var config = Object.assign({}, window.NAF_CONFIG || {}, loadLocalPreviewSettings());
       var goal = Number(config.GOAL_EUR || 10000);
       var targetDate = config.TARGET_DATE || "2027-02-01";
+      var largeDonationsEnabled = boolSetting(config.LARGE_DONATIONS_ENABLED, true);
       var supabaseUrl = cleanUrl(config.SUPABASE_URL || "");
       var anonKey = config.SUPABASE_ANON_KEY || config.SUPABASE_PUBLISHABLE_KEY || "";
       var reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
@@ -2357,6 +2362,7 @@
       document.getElementById("stat-days").textContent = numberFormat.format(rendered.days);
       bindMobileWarning();
       bindMobileMenu();
+      syncLargeDonationOption();
       bindDonateModal();
       bindNoahCarousel();
       renderFundraisingActions();
@@ -2366,6 +2372,24 @@
 
       function cleanUrl(url) {
         return String(url || "").replace(/\/+$/, "");
+      }
+
+      function boolSetting(value, fallback) {
+        if (typeof value === "boolean") {
+          return value;
+        }
+        if (value === undefined || value === null || value === "") {
+          return fallback;
+        }
+        return !["0", "false", "nee", "no", "off", "uit"].includes(String(value).toLowerCase());
+      }
+
+      function syncLargeDonationOption() {
+        var action = document.querySelector("[data-large-transfer-action]");
+        if (!action) {
+          return;
+        }
+        action.hidden = !largeDonationsEnabled;
       }
 
       function loadLocalPreviewSettings() {

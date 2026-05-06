@@ -443,6 +443,74 @@
       gap: 12px;
     }
 
+    .switch-field {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      padding: 14px;
+      border: 1px solid rgba(8, 8, 6, 0.16);
+      border-radius: 8px;
+      background: rgba(8, 8, 6, 0.045);
+      color: var(--ink);
+    }
+
+    .switch-copy {
+      display: grid;
+      gap: 4px;
+    }
+
+    .switch-copy p {
+      color: rgba(8, 8, 6, 0.66);
+      font-weight: 700;
+    }
+
+    .switch {
+      position: relative;
+      width: 58px;
+      height: 32px;
+      flex: 0 0 58px;
+    }
+
+    .switch input {
+      position: absolute;
+      inset: 0;
+      opacity: 0;
+      cursor: pointer;
+    }
+
+    .switch span {
+      position: absolute;
+      inset: 0;
+      border: 1px solid rgba(8, 8, 6, 0.22);
+      border-radius: 999px;
+      background: rgba(8, 8, 6, 0.18);
+      transition: background 180ms var(--ease), border-color 180ms var(--ease);
+    }
+
+    .switch span::before {
+      content: "";
+      position: absolute;
+      top: 4px;
+      left: 4px;
+      width: 22px;
+      height: 22px;
+      border-radius: 999px;
+      background: var(--surface-strong);
+      box-shadow: 0 2px 8px rgba(8, 8, 6, 0.18);
+      transition: transform 180ms var(--ease), background 180ms var(--ease);
+    }
+
+    .switch input:checked + span {
+      border-color: var(--ink);
+      background: var(--acid);
+    }
+
+    .switch input:checked + span::before {
+      transform: translateX(26px);
+      background: var(--ink);
+    }
+
     input,
     textarea,
     select {
@@ -918,6 +986,16 @@
                   <input id="iban_name" name="iban_name" type="text" required>
                 </div>
               </div>
+              <div class="switch-field">
+                <div class="switch-copy">
+                  <label for="large_donations_enabled">Grote donaties</label>
+                  <p>Toon de knop voor groot bedrag overmaken en accepteer formulierinzendingen.</p>
+                </div>
+                <label class="switch" aria-label="Grote donaties aan of uit">
+                  <input id="large_donations_enabled" name="large_donations_enabled" type="checkbox">
+                  <span></span>
+                </label>
+              </div>
               <div class="form-actions">
                 <button class="button dark" type="submit">Instellingen opslaan</button>
               </div>
@@ -988,6 +1066,7 @@
         GOAL_EUR: goal,
         IBAN: config.IBAN || "",
         IBAN_NAME: config.IBAN_NAME || "",
+        LARGE_DONATIONS_ENABLED: boolSetting(config.LARGE_DONATIONS_ENABLED, true),
         ACTIONS: normalizeActions(config.ACTIONS)
       };
       var currentDonations = [];
@@ -1016,6 +1095,16 @@
 
       function apiPath(path) {
         return (adminApiUrl || "") + path;
+      }
+
+      function boolSetting(value, fallback) {
+        if (typeof value === "boolean") {
+          return value;
+        }
+        if (value === undefined || value === null || value === "") {
+          return fallback;
+        }
+        return !["0", "false", "nee", "no", "off", "uit"].includes(String(value).toLowerCase());
       }
 
       function nextFrame() {
@@ -1355,6 +1444,7 @@
             GOAL_EUR: Number(config.GOAL_EUR || 10000),
             IBAN: config.IBAN || "",
             IBAN_NAME: config.IBAN_NAME || "",
+            LARGE_DONATIONS_ENABLED: boolSetting(config.LARGE_DONATIONS_ENABLED, true),
             ACTIONS: normalizeActions(config.ACTIONS)
           };
           goal = settingsState.GOAL_EUR;
@@ -1362,6 +1452,7 @@
           document.getElementById("goal").value = settingsState.GOAL_EUR;
           document.getElementById("iban").value = settingsState.IBAN;
           document.getElementById("iban_name").value = settingsState.IBAN_NAME;
+          document.getElementById("large_donations_enabled").checked = settingsState.LARGE_DONATIONS_ENABLED;
           renderActionsEditor(settingsState.ACTIONS);
           settingsMessage.className = "message";
           settingsMessage.textContent = "Lokale previewmodus: wijzigingen gelden in deze browser.";
@@ -1381,6 +1472,7 @@
             GOAL_EUR: Number(body.GOAL_EUR || 10000),
             IBAN: body.IBAN || "",
             IBAN_NAME: body.IBAN_NAME || "",
+            LARGE_DONATIONS_ENABLED: boolSetting(body.LARGE_DONATIONS_ENABLED, true),
             ACTIONS: normalizeActions(body.ACTIONS)
           };
           goal = settingsState.GOAL_EUR;
@@ -1388,6 +1480,7 @@
           document.getElementById("goal").value = settingsState.GOAL_EUR;
           document.getElementById("iban").value = settingsState.IBAN;
           document.getElementById("iban_name").value = settingsState.IBAN_NAME;
+          document.getElementById("large_donations_enabled").checked = settingsState.LARGE_DONATIONS_ENABLED;
           renderActionsEditor(settingsState.ACTIONS);
         } catch (error) {
           handleAuthError(error);
@@ -1903,6 +1996,7 @@
             GOAL_EUR: Number(nextSettings.GOAL_EUR || 10000),
             IBAN: nextSettings.IBAN || "",
             IBAN_NAME: nextSettings.IBAN_NAME || "",
+            LARGE_DONATIONS_ENABLED: boolSetting(nextSettings.LARGE_DONATIONS_ENABLED, true),
             ACTIONS: normalizeActions(nextSettings.ACTIONS)
           })
         });
@@ -1916,6 +2010,7 @@
             GOAL_EUR: Number(body.settings.GOAL_EUR || nextSettings.GOAL_EUR || 10000),
             IBAN: body.settings.IBAN || "",
             IBAN_NAME: body.settings.IBAN_NAME || "",
+            LARGE_DONATIONS_ENABLED: boolSetting(body.settings.LARGE_DONATIONS_ENABLED, true),
             ACTIONS: normalizeActions(body.settings.ACTIONS)
           };
           goal = settingsState.GOAL_EUR;
@@ -1936,6 +2031,7 @@
             GOAL_EUR: Number(nextSettings.GOAL_EUR || 10000),
             IBAN: nextSettings.IBAN || "",
             IBAN_NAME: nextSettings.IBAN_NAME || "",
+            LARGE_DONATIONS_ENABLED: boolSetting(nextSettings.LARGE_DONATIONS_ENABLED, true),
             ACTIONS: normalizeActions(nextSettings.ACTIONS)
           }));
         } catch (error) {
@@ -1947,6 +2043,7 @@
         settingsState.GOAL_EUR = Number(document.getElementById("goal").value || 10000);
         settingsState.IBAN = document.getElementById("iban").value.trim();
         settingsState.IBAN_NAME = document.getElementById("iban_name").value.trim();
+        settingsState.LARGE_DONATIONS_ENABLED = document.getElementById("large_donations_enabled").checked;
         settingsState.ACTIONS = normalizeActions(collectActions());
       }
 

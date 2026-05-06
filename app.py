@@ -93,6 +93,14 @@ def get_setting(key, default=None):
     return os.environ.get(key, default)
 
 
+def setting_bool(value, default=True):
+    if isinstance(value, bool):
+        return value
+    if value is None:
+        return default
+    return str(value).strip().lower() not in {"0", "false", "nee", "no", "off", "uit"}
+
+
 def normalize_actions(value):
     """Return a compact, safe actions list for config/admin use."""
     if not isinstance(value, list):
@@ -425,6 +433,7 @@ def config_js():
         "IBAN": get_setting("IBAN", "[IBAN invullen]"),
         "IBAN_NAME": get_setting("IBAN_NAME", "Stichting [naam invullen]"),
         "TIKKIE_URL": get_setting("TIKKIE_URL", "[Tikkie link invullen]"),
+        "LARGE_DONATIONS_ENABLED": setting_bool(get_setting("LARGE_DONATIONS_ENABLED", "true"), True),
         "ACTIONS": normalize_actions(get_setting("ACTIONS", DEFAULT_ACTIONS)),
     }
     body = "window.NAF_CONFIG = " + json.dumps(config, ensure_ascii=True) + ";\n"
@@ -582,6 +591,7 @@ def get_settings():
         "IBAN": settings.get("IBAN", os.environ.get("IBAN", "[IBAN invullen]")),
         "IBAN_NAME": settings.get("IBAN_NAME", os.environ.get("IBAN_NAME", "Stichting [naam invullen]")),
         "TIKKIE_URL": settings.get("TIKKIE_URL", os.environ.get("TIKKIE_URL", "[Tikkie link invullen]")),
+        "LARGE_DONATIONS_ENABLED": setting_bool(settings.get("LARGE_DONATIONS_ENABLED", os.environ.get("LARGE_DONATIONS_ENABLED", "true")), True),
         "ACTIONS": normalize_actions(settings.get("ACTIONS", DEFAULT_ACTIONS)),
     })
 
@@ -599,6 +609,7 @@ def update_settings():
         "GOAL_EUR": str(settings.get("GOAL_EUR", os.environ.get("GOAL_EUR", "10000"))),
         "IBAN": settings.get("IBAN", os.environ.get("IBAN", "")),
         "IBAN_NAME": settings.get("IBAN_NAME", os.environ.get("IBAN_NAME", "")),
+        "LARGE_DONATIONS_ENABLED": setting_bool(settings.get("LARGE_DONATIONS_ENABLED", os.environ.get("LARGE_DONATIONS_ENABLED", "true")), True),
         "ACTIONS": normalize_actions(settings.get("ACTIONS", DEFAULT_ACTIONS)),
     }
     incoming_actions, action_events = stamp_action_metadata(
@@ -612,6 +623,7 @@ def update_settings():
         "IBAN": payload.get("IBAN", settings.get("IBAN", "")),
         "IBAN_NAME": payload.get("IBAN_NAME", settings.get("IBAN_NAME", "")),
         "TIKKIE_URL": payload.get("TIKKIE_URL", settings.get("TIKKIE_URL", "")),
+        "LARGE_DONATIONS_ENABLED": "true" if setting_bool(payload.get("LARGE_DONATIONS_ENABLED", settings.get("LARGE_DONATIONS_ENABLED", "true")), True) else "false",
         "ACTIONS": incoming_actions,
     })
     
@@ -627,6 +639,13 @@ def update_settings():
         if previous_settings["IBAN_NAME"] != settings.get("IBAN_NAME", ""):
             changed.append("rekeninghouder")
             detail_lines.append(describe_value_change("Rekeninghouder", previous_settings["IBAN_NAME"], settings.get("IBAN_NAME", "")))
+        if previous_settings["LARGE_DONATIONS_ENABLED"] != setting_bool(settings.get("LARGE_DONATIONS_ENABLED", "true"), True):
+            changed.append("grote donaties")
+            detail_lines.append(describe_value_change(
+                "Grote donaties",
+                "aan" if previous_settings["LARGE_DONATIONS_ENABLED"] else "uit",
+                "aan" if setting_bool(settings.get("LARGE_DONATIONS_ENABLED", "true"), True) else "uit",
+            ))
         if previous_settings["ACTIONS"] != settings.get("ACTIONS", []) and not action_events:
             changed.append("lopende acties")
             detail_lines.append("Lopende acties zijn bijgewerkt.")
@@ -653,6 +672,7 @@ def update_settings():
                 "GOAL_EUR": int(settings.get("GOAL_EUR", os.environ.get("GOAL_EUR", "10000"))),
                 "IBAN": settings.get("IBAN", os.environ.get("IBAN", "")),
                 "IBAN_NAME": settings.get("IBAN_NAME", os.environ.get("IBAN_NAME", "")),
+                "LARGE_DONATIONS_ENABLED": setting_bool(settings.get("LARGE_DONATIONS_ENABLED", "true"), True),
                 "ACTIONS": normalize_actions(settings.get("ACTIONS", DEFAULT_ACTIONS)),
             },
         })
@@ -729,6 +749,9 @@ def add_donation():
 def create_large_donation_form():
     if not has_admin_config():
         return jsonify({"error": "SUPABASE_SERVICE_KEY ontbreekt in .env."}), 500
+
+    if not setting_bool(get_setting("LARGE_DONATIONS_ENABLED", "true"), True):
+        return jsonify({"error": "Grote donaties zijn op dit moment tijdelijk niet beschikbaar."}), 403
 
     payload = request.get_json(silent=True) or {}
     try:

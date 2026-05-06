@@ -480,6 +480,20 @@
       background: rgba(217, 255, 63, 0.22);
     }
 
+    .unavailable-box {
+      display: none;
+      gap: 12px;
+      padding: 22px;
+      border-top: 1px solid rgba(8, 8, 6, 0.18);
+      background: rgba(255, 90, 61, 0.12);
+      color: var(--ink);
+      font-weight: 750;
+    }
+
+    .unavailable-box.is-visible {
+      display: grid;
+    }
+
     .success-box.is-visible {
       display: grid;
     }
@@ -603,6 +617,13 @@
             <a class="button" href="index.html">Terug naar site</a>
           </div>
         </div>
+        <div class="unavailable-box" id="unavailable-box">
+          <strong>Grote donaties zijn tijdelijk niet beschikbaar.</strong>
+          <p>We moeten dit eerst afstemmen met de hoofdorganisatie. Doneren via GoFundMe kan nog wel.</p>
+          <div class="form-actions">
+            <a class="button dark" href="index.html#doneer">Terug naar doneren</a>
+          </div>
+        </div>
       </section>
 
       <aside class="side-card" aria-label="Overmaken">
@@ -650,13 +671,20 @@
       var form = document.getElementById("large-donation-form");
       var message = document.getElementById("form-message");
       var successBox = document.getElementById("success-box");
+      var unavailableBox = document.getElementById("unavailable-box");
       var pdfLink = document.getElementById("pdf-link");
       var transferAmount = document.getElementById("transfer-amount");
       var companyFields = document.getElementById("company-fields");
       var companyNameInput = document.getElementById("company_name");
       var contactPersonInput = document.getElementById("contact_person");
+      var largeDonationsEnabled = boolSetting(config.LARGE_DONATIONS_ENABLED, true);
 
       document.getElementById("transfer-date").textContent = formatDutchDate(new Date());
+      if (!largeDonationsEnabled) {
+        form.style.display = "none";
+        unavailableBox.classList.add("is-visible");
+        return;
+      }
       form.addEventListener("submit", handleSubmit);
       form.amount.addEventListener("input", updateTransferSummary);
       document.querySelectorAll("[name='donor_type']").forEach(function (input) {
@@ -676,6 +704,16 @@
 
       function apiPath(path) {
         return (apiBase || "") + path;
+      }
+
+      function boolSetting(value, fallback) {
+        if (typeof value === "boolean") {
+          return value;
+        }
+        if (value === undefined || value === null || value === "") {
+          return fallback;
+        }
+        return !["0", "false", "nee", "no", "off", "uit"].includes(String(value).toLowerCase());
       }
 
       function formatDutchDate(date) {
