@@ -12,6 +12,9 @@ load_dotenv()
 
 BASE_DIR = Path(__file__).resolve().parent
 SETTINGS_FILE = BASE_DIR / "settings.json"
+_SETTINGS_CACHE = None
+_SETTINGS_CACHE_AT = 0
+SETTINGS_CACHE_SECONDS = 5
 DEFAULT_ACTIONS = [
     {
         "title": "Sponsorloop",
@@ -66,24 +69,66 @@ app.secret_key = os.environ.get("FLASK_SECRET_KEY", "dev-only-change-me")
 
 
 def load_settings():
-    """Load settings from file or environment variables."""
+    """Load settings from persistent Supabase storage, then local file."""
+    global _SETTINGS_CACHE, _SETTINGS_CACHE_AT
+
+    import time
+
+    if _SETTINGS_CACHE is not None and time.time() - _SETTINGS_CACHE_AT < SETTINGS_CACHE_SECONDS:
+        return dict(_SETTINGS_CACHE)
+
+    if has_admin_config():
+        try:
+            response = supabase_admin().table("site_settings").select("key, value").execute()
+            settings = {}
+            for row in response.data or []:
+                settings[str(row.get("key"))] = row.get("value")
+            if settings:
+                _SETTINGS_CACHE = settings
+                _SETTINGS_CACHE_AT = time.time()
+                return dict(settings)
+        except Exception as error:
+            print("Supabase settings load failed:", error)
+
     if SETTINGS_FILE.exists():
         try:
             with open(SETTINGS_FILE, "r") as f:
-                return json.load(f)
+                settings = json.load(f)
+                _SETTINGS_CACHE = settings
+                _SETTINGS_CACHE_AT = time.time()
+                return dict(settings)
         except (json.JSONDecodeError, IOError):
             pass
     return {}
 
 
 def save_settings(settings):
-    """Save settings to file."""
+    """Save settings to Supabase and local file fallback."""
+    global _SETTINGS_CACHE, _SETTINGS_CACHE_AT
+
+    saved_anywhere = False
+    if has_admin_config():
+        try:
+            rows = [{"key": str(key), "value": value} for key, value in settings.items()]
+            if rows:
+                supabase_admin().table("site_settings").upsert(rows, on_conflict="key").execute()
+                saved_anywhere = True
+        except Exception as error:
+            print("Supabase settings save failed:", error)
+
     try:
         with open(SETTINGS_FILE, "w") as f:
             json.dump(settings, f, indent=2)
-        return True
+        saved_anywhere = True
     except IOError:
-        return False
+        pass
+
+    if saved_anywhere:
+        import time
+
+        _SETTINGS_CACHE = dict(settings)
+        _SETTINGS_CACHE_AT = time.time()
+    return saved_anywhere
 
 
 def get_setting(key, default=None):

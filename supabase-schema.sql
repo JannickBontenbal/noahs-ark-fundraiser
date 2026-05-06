@@ -104,6 +104,17 @@ create table if not exists public.contact_messages (
 
 alter table public.contact_messages enable row level security;
 
+create table if not exists public.site_settings (
+  key text primary key,
+  value jsonb not null,
+  updated_at timestamptz not null default now()
+);
+
+alter table public.site_settings enable row level security;
+
+alter table public.site_settings
+add column if not exists updated_at timestamptz not null default now();
+
 create or replace function public.prevent_admin_changelog_mutation()
 returns trigger
 language plpgsql

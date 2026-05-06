@@ -1537,16 +1537,33 @@
       margin-top: 4px;
     }
 
-    .large-transfer-action[hidden] {
-      display: none;
-    }
-
     .large-transfer-row {
       display: flex;
       justify-content: center;
       align-items: center;
       gap: 10px;
       width: min(100%, 420px);
+    }
+
+    .large-transfer-row[hidden] {
+      display: none;
+    }
+
+    .large-transfer-pending {
+      display: none;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      max-width: 420px;
+      color: rgba(8, 8, 6, 0.64);
+      font-size: 13px;
+      font-weight: 750;
+      line-height: 1.3;
+      text-align: center;
+    }
+
+    .large-transfer-pending.is-visible {
+      display: flex;
     }
 
     .large-transfer-button {
@@ -1611,6 +1628,16 @@
     .info-icon:focus-visible::after {
       opacity: 1;
       transform: translateY(0);
+    }
+
+    .large-transfer-pending .info-icon::after {
+      right: 50%;
+      transform: translate(50%, 6px);
+    }
+
+    .large-transfer-pending .info-icon:hover::after,
+    .large-transfer-pending .info-icon:focus-visible::after {
+      transform: translate(50%, 0);
     }
 
     .modal-actions {
@@ -2328,9 +2355,13 @@
           <p class="modal-copy">Let op: donaties via GoFundMe zijn niet automatisch fiscaal aftrekbaar en GoFundMe verstrekt geen fiscaal ontvangstbewijs.</p>
         </div>
         <div class="large-transfer-action" data-large-transfer-action>
-          <div class="large-transfer-row">
+          <div class="large-transfer-row" data-large-transfer-row>
             <a class="button large-transfer-button" href="grote-donatie.html">Groot bedrag overmaken?</a>
             <button class="info-icon" type="button" aria-label="Informatie over grote bedragen" data-tooltip="Voor grote bedragen raden wij aan om het direct over te maken op de IBAN van Noah's Ark. Het formulier is vooral voor onze administratie en om de teller goed bij te houden.">i</button>
+          </div>
+          <div class="large-transfer-pending" data-large-transfer-pending>
+            <span>Grotere fiscaal aftrekbare giften</span>
+            <button class="info-icon" type="button" aria-label="Informatie over grote fiscaal aftrekbare giften" data-tooltip="Als u een groter bedrag wilt overmaken en wilt dat dit fiscaal aftrekbaar is, zijn wij dit nog aan het afstemmen met de hoofdorganisatie. We verzoeken u nog even te wachten.">i</button>
           </div>
         </div>
         <div class="copy-status" id="copy-status" aria-live="polite"></div>
@@ -2401,11 +2432,13 @@
       }
 
       function syncLargeDonationOption() {
-        var action = document.querySelector("[data-large-transfer-action]");
-        if (!action) {
+        var row = document.querySelector("[data-large-transfer-row]");
+        var pending = document.querySelector("[data-large-transfer-pending]");
+        if (!row || !pending) {
           return;
         }
-        action.hidden = !largeDonationsEnabled;
+        row.hidden = !largeDonationsEnabled;
+        pending.classList.toggle("is-visible", !largeDonationsEnabled);
       }
 
       function loadLocalPreviewSettings() {
