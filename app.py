@@ -419,6 +419,18 @@ def changelog_page():
     return send_from_directory(BASE_DIR, "changelog.html")
 
 
+@app.get("/contact")
+@app.get("/contact.html")
+def contact_page():
+    return send_from_directory(BASE_DIR, "contact.html")
+
+
+@app.get("/legal")
+@app.get("/legal.html")
+def legal_page():
+    return send_from_directory(BASE_DIR, "legal.html")
+
+
 @app.get("/grote-donatie")
 @app.get("/grote-donatie.html")
 def large_donation_page():
@@ -842,6 +854,92 @@ def create_large_donation_form():
         "donation": donation,
         "pdf_url": "/api/large-donation-forms/" + created["id"] + "/pdf",
     }), 201
+
+
+@app.post("/api/contact-messages")
+def create_contact_message():
+    if not has_admin_config():
+        return jsonify({"error": "Contactformulier is tijdelijk niet beschikbaar."}), 500
+
+    payload = request.get_json(silent=True) or {}
+    name = clean_text(payload.get("name"), 140)
+    email = clean_text(payload.get("email"), 180)
+    subject = clean_text(payload.get("subject"), 180)
+    message = clean_text(payload.get("message"), 1200)
+
+    if not name:
+        return jsonify({"error": "Naam is verplicht."}), 400
+    if not message:
+        return jsonify({"error": "Bericht is verplicht."}), 400
+
+    row = {
+        "name": name,
+        "email": email or None,
+        "subject": subject or None,
+        "message": message,
+    }
+    try:
+        response = supabase_admin().table("contact_messages").insert(row).execute()
+    except Exception as error:
+        return jsonify({"error": "Kon bericht niet opslaan. Run supabase-schema.sql opnieuw in Supabase. " + str(error)}), 500
+
+    created = response.data[0] if response.data else row
+    log_admin_change(
+        "contactbericht ontvangen",
+        "contact_message",
+        created.get("id"),
+        name + " stuurde een contactbericht" + ((" over '" + subject + "'") if subject else "") + ".",
+        admin_name="Website contact",
+    )
+    return jsonify({"message": created}), 201
+
+
+@app.get("/api/contact-messages")
+def list_contact_messages():
+    blocked = admin_required()
+    if blocked:
+        return blocked
+
+    if not has_admin_config():
+        return jsonify({"error": "SUPABASE_SERVICE_KEY ontbreekt in .env."}), 500
+
+    response = (
+        supabase_admin()
+        .table("contact_messages")
+        .select("id, name, email, subject, message, created_at")
+        .order("created_at", desc=True)
+        .limit(80)
+        .execute()
+    )
+    return jsonify({"messages": response.data or []})
+
+
+@app.delete("/api/contact-messages/<message_id>")
+def delete_contact_message(message_id):
+    blocked = admin_required()
+    if blocked:
+        return blocked
+
+    if not has_admin_config():
+        return jsonify({"error": "SUPABASE_SERVICE_KEY ontbreekt in .env."}), 500
+
+    response = (
+        supabase_admin()
+        .table("contact_messages")
+        .select("id, name, subject")
+        .eq("id", message_id)
+        .limit(1)
+        .execute()
+    )
+    message = response.data[0] if response.data else {}
+    supabase_admin().table("contact_messages").delete().eq("id", message_id).execute()
+    log_admin_change(
+        "contactbericht verwijderd",
+        "contact_message",
+        message_id,
+        current_admin_name() + " verwijderde contactbericht van " + (message.get("name") or "Onbekend") + ".",
+    )
+    return jsonify({"ok": True})
 
 
 @app.get("/api/large-donation-forms")

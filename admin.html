@@ -831,6 +831,7 @@
         <span class="user-pill"><span class="presence-dot"></span><span id="active-user">Ingelogd</span></span>
         <div class="presence-tray" id="presence-tray" aria-label="Online teamleden"></div>
         <a class="button" href="changelog.html" target="_blank" rel="noreferrer">Changelog</a>
+        <a class="button" href="#contact-panel">Contact</a>
         <a class="button" href="#large-forms-panel">Formulieren</a>
         <button class="button" type="button" id="refresh-button">Vernieuwen</button>
         <button class="button danger" type="button" id="logout-button">Uitloggen</button>
@@ -930,6 +931,37 @@
       </div>
 
       <div class="section-stack">
+        <section class="panel" id="contact-panel" aria-labelledby="contact-heading" data-presence-section="Contact">
+          <div class="panel-head">
+            <div>
+              <p class="kicker">Contact</p>
+              <h2 id="contact-heading">Berichten</h2>
+            </div>
+          </div>
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>Datum</th>
+                  <th>Naam</th>
+                  <th>E-mail</th>
+                  <th>Onderwerp</th>
+                  <th>Bericht</th>
+                  <th>Verwijder</th>
+                </tr>
+              </thead>
+              <tbody id="contact-body">
+                <tr>
+                  <td class="empty-row" colspan="6">Nog geen contactberichten geladen.</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+          <div class="panel-body">
+            <p class="message" id="contact-message" aria-live="polite"></p>
+          </div>
+        </section>
+
         <section class="panel" id="large-forms-panel" aria-labelledby="large-forms-heading" data-presence-section="Grote formulieren">
           <div class="panel-head">
             <div>
@@ -1057,8 +1089,10 @@
       var settingsMessage = document.getElementById("settings-message");
       var actionsMessage = document.getElementById("actions-message");
       var largeFormsMessage = document.getElementById("large-forms-message");
+      var contactMessage = document.getElementById("contact-message");
       var donationsBody = document.getElementById("donations-body");
       var largeFormsBody = document.getElementById("large-forms-body");
+      var contactBody = document.getElementById("contact-body");
       var actionsEditor = document.getElementById("actions-editor");
       var activeUser = document.getElementById("active-user");
       var presenceTray = document.getElementById("presence-tray");
@@ -1071,6 +1105,7 @@
       };
       var currentDonations = [];
       var currentLargeForms = [];
+      var currentContactMessages = [];
 
       document.getElementById("summary-goal").textContent = currencyFormat.format(goal);
       document.getElementById("password-form").addEventListener("submit", handlePassword);
@@ -1193,10 +1228,11 @@
         if (localPreview) {
           loadSettingsForm();
           loadAdminData();
+          loadContactMessages();
           loadLargeForms();
           return;
         }
-        await Promise.all([loadSettingsForm(), loadAdminData(), loadLargeForms()]);
+        await Promise.all([loadSettingsForm(), loadAdminData(), loadContactMessages(), loadLargeForms()]);
       }
 
       async function handleLogout(event) {
@@ -1548,6 +1584,34 @@
         }
       }
 
+      async function loadContactMessages() {
+        if (localPreview) {
+          renderContactMessages([]);
+          contactMessage.className = "message";
+          contactMessage.textContent = "Lokale previewmodus: contactberichten verschijnen via Flask/Supabase.";
+          return;
+        }
+
+        try {
+          contactMessage.className = "message";
+          contactMessage.textContent = "Contact laden...";
+          var response = await fetch(apiPath("/api/contact-messages"), {
+            credentials: "include"
+          });
+          if (!response.ok) {
+            throw await httpError(response, "Kon contactberichten niet laden.");
+          }
+          var body = await response.json();
+          currentContactMessages = body.messages || [];
+          renderContactMessages(currentContactMessages);
+          contactMessage.textContent = "";
+        } catch (error) {
+          handleAuthError(error);
+          contactMessage.className = "message error";
+          contactMessage.textContent = error.message || "Kon contactberichten niet laden.";
+        }
+      }
+
       function renderSummary(rows) {
         var total = rows.reduce(function (sum, donation) {
           return sum + (Number(donation.amount) || 0);
@@ -1643,6 +1707,42 @@
           deleteCell.appendChild(deleteButton);
           row.appendChild(deleteCell);
           largeFormsBody.appendChild(row);
+        });
+      }
+
+      function renderContactMessages(rows) {
+        contactBody.innerHTML = "";
+
+        if (!rows.length) {
+          var emptyRow = document.createElement("tr");
+          var emptyCell = document.createElement("td");
+          emptyCell.className = "empty-row";
+          emptyCell.colSpan = 6;
+          emptyCell.textContent = "Nog geen contactberichten.";
+          emptyRow.appendChild(emptyCell);
+          contactBody.appendChild(emptyRow);
+          return;
+        }
+
+        rows.forEach(function (messageRow) {
+          var row = document.createElement("tr");
+          row.appendChild(cell(formatDate(messageRow.created_at)));
+          row.appendChild(cell(messageRow.name || "Onbekend"));
+          row.appendChild(cell(messageRow.email || "", !messageRow.email));
+          row.appendChild(cell(messageRow.subject || "", !messageRow.subject));
+          row.appendChild(cell(messageRow.message || ""));
+
+          var deleteCell = document.createElement("td");
+          var deleteButton = document.createElement("button");
+          deleteButton.className = "button danger";
+          deleteButton.type = "button";
+          deleteButton.textContent = "Verwijder";
+          deleteButton.addEventListener("click", function () {
+            deleteContactMessage(messageRow.id, deleteButton);
+          });
+          deleteCell.appendChild(deleteButton);
+          row.appendChild(deleteCell);
+          contactBody.appendChild(row);
         });
       }
 
@@ -1794,6 +1894,43 @@
           handleAuthError(error);
           largeFormsMessage.className = "message error";
           largeFormsMessage.textContent = error.message || "Formulier verwijderen is mislukt.";
+          if (button) {
+            button.disabled = false;
+            button.textContent = originalButtonText;
+          }
+        }
+      }
+
+      async function deleteContactMessage(id, button) {
+        if (!window.confirm("Dit contactbericht verwijderen?")) {
+          return;
+        }
+
+        contactMessage.className = "message";
+        contactMessage.textContent = "Contactbericht verwijderen...";
+        var originalButtonText = button ? button.textContent : "";
+        try {
+          if (button) {
+            button.disabled = true;
+            button.textContent = "Verwijderen...";
+          }
+          await nextFrame();
+          var response = await fetch(apiPath("/api/contact-messages/" + encodeURIComponent(id)), {
+            method: "DELETE",
+            credentials: "include"
+          });
+          if (!response.ok) {
+            throw await httpError(response, "Contactbericht verwijderen is mislukt.");
+          }
+          currentContactMessages = currentContactMessages.filter(function (messageRow) {
+            return messageRow.id !== id;
+          });
+          renderContactMessages(currentContactMessages);
+          contactMessage.textContent = "Contactbericht verwijderd.";
+        } catch (error) {
+          handleAuthError(error);
+          contactMessage.className = "message error";
+          contactMessage.textContent = error.message || "Contactbericht verwijderen is mislukt.";
           if (button) {
             button.disabled = false;
             button.textContent = originalButtonText;

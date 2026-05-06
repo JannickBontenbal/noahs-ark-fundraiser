@@ -92,7 +92,8 @@
     }
 
     button,
-    input {
+    input,
+    textarea {
       font: inherit;
     }
 
@@ -1351,6 +1352,14 @@
       display: flex;
       justify-content: space-between;
       gap: 18px;
+      align-items: center;
+    }
+
+    .footer-links {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 14px;
+      justify-content: end;
     }
 
     .footer a {
@@ -1915,8 +1924,10 @@
         width: 100%;
       }
 
-      .footer-inner {
-        flex-direction: column;
+      .footer-inner,
+      .footer-links {
+        display: grid;
+        justify-content: start;
       }
     }
 
@@ -2290,7 +2301,11 @@
   <footer class="footer">
     <div class="footer-inner">
       <span>&copy; 2026 Guido de Br&egrave;s x Noah's Ark Uganda</span>
-      <a href="https://www.nacmu.nl" target="_blank" rel="noreferrer">nacmu.nl</a>
+      <div class="footer-links">
+        <a href="https://www.nacmu.nl" target="_blank" rel="noreferrer">nacmu.nl</a>
+        <a href="contact.html">Contact</a>
+        <a href="legal.html">Legal</a>
+      </div>
     </div>
   </footer>
 
@@ -2310,6 +2325,7 @@
             <a class="gofundme-button" href="https://www.gofundme.com/f/guido-de-bres-voor-noahs-ark?attribution_id=sl:cead965a-749b-4d4f-8b1c-ec9d6052efa0" target="_blank" rel="noreferrer">Nu doneren</a>
           </div>
           <p class="modal-copy">De knop opent de offici&euml;le GoFundMe betaalpagina voor deze actie.</p>
+          <p class="modal-copy">Let op: donaties via GoFundMe zijn niet automatisch fiscaal aftrekbaar en GoFundMe verstrekt geen fiscaal ontvangstbewijs.</p>
         </div>
         <div class="large-transfer-action" data-large-transfer-action>
           <div class="large-transfer-row">
@@ -2491,6 +2507,17 @@
           var rows = await fallback.json();
           return rows.length;
         }
+      }
+
+      async function httpError(response, fallback) {
+        var message = fallback;
+        try {
+          var body = await response.json();
+          message = body.error || message;
+        } catch (error) {
+          message = response.statusText || message;
+        }
+        return new Error(message);
       }
 
       function renderStats(next) {

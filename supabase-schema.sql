@@ -93,6 +93,17 @@ add column if not exists last_seen timestamptz not null default now();
 create unique index if not exists admin_presence_device_id_key
 on public.admin_presence (device_id);
 
+create table if not exists public.contact_messages (
+  id uuid primary key default gen_random_uuid(),
+  name text not null,
+  email text,
+  subject text,
+  message text not null,
+  created_at timestamptz not null default now()
+);
+
+alter table public.contact_messages enable row level security;
+
 create or replace function public.prevent_admin_changelog_mutation()
 returns trigger
 language plpgsql
