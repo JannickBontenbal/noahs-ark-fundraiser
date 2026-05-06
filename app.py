@@ -59,6 +59,7 @@ SUPABASE_URL = os.environ.get("SUPABASE_URL", "")
 SUPABASE_KEY = os.environ.get("SUPABASE_KEY", "")
 SUPABASE_SERVICE_KEY = os.environ.get("SUPABASE_SERVICE_KEY", "")
 ADMIN_PASSWORD_HASH = os.environ.get("ADMIN_PASSWORD_HASH", "")
+_SUPABASE_ADMIN_CLIENT = None
 
 app = Flask(__name__, static_folder=None)
 app.secret_key = os.environ.get("FLASK_SECRET_KEY", "dev-only-change-me")
@@ -252,10 +253,15 @@ def stamp_action_metadata(previous_actions, incoming_actions, actor):
 
 
 def supabase_admin():
+    global _SUPABASE_ADMIN_CLIENT
+    if _SUPABASE_ADMIN_CLIENT is not None:
+        return _SUPABASE_ADMIN_CLIENT
+
     from supabase import create_client
 
     key = SUPABASE_SERVICE_KEY or SUPABASE_KEY
-    return create_client(SUPABASE_URL, key)
+    _SUPABASE_ADMIN_CLIENT = create_client(SUPABASE_URL, key)
+    return _SUPABASE_ADMIN_CLIENT
 
 
 def has_supabase_config() -> bool:

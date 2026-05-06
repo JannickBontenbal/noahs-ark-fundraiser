@@ -4,7 +4,7 @@ services:
     runtime: python
     plan: free
     buildCommand: pip install -r requirements.txt
-    startCommand: gunicorn app:app
+    startCommand: gunicorn app:app --workers 1 --threads 2 --timeout 120 --max-requests 200 --max-requests-jitter 40
     envVars:
       - key: SUPABASE_URL
         value: https://ipbfwummhkuflvqdomai.supabase.co
