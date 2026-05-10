@@ -508,6 +508,11 @@ def favicon():
     return send_from_directory(BASE_DIR, "favicon.svg")
 
 
+@app.get("/images/<path:filename>")
+def images(filename):
+    return send_from_directory(BASE_DIR / "images", filename, max_age=86400)
+
+
 @app.post("/api/login")
 def login():
     payload = request.get_json(silent=True) or {}
